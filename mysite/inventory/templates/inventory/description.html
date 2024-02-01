@@ -1,0 +1,15 @@
+<form action="{% url 'inventory:set_description' item.id %}" method="post">
+{% csrf_token %}
+<fieldset>
+    <legend><h1>{{ item.title }}</h1></legend>
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<!--    {% for i in question.choice_set.all %}-->
+
+<!--    {% endfor %}-->
+        <label for="description">Description: </label>
+        <input type="text" name="description"  id="description"><br><br>
+</fieldset>
+
+
+<input type="submit" value="set_description">
+</form>
