@@ -6,7 +6,7 @@ from django.utils  import timezone
 
 class Item_Category(models.Model):
     name = models.CharField(max_length=50)
-    parent_category_id = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -36,17 +36,19 @@ class Item(models.Model):
     log_number = models.CharField(max_length=45, blank=True, null=True)
     msrp_price = models.DecimalField(max_digits=10,decimal_places=2)
     bid_start_price = models.DecimalField(max_digits=10,decimal_places=2)
-    category_id = models.ForeignKey(Item_Category, on_delete=models.CASCADE, blank=True, null=True)
-    status_id = models.ForeignKey(Item_Status, on_delete=models.CASCADE, blank=True, null=True)
+    category = models.ForeignKey(Item_Category, on_delete=models.CASCADE, blank=True, null=True)
+    status = models.ForeignKey(Item_Status, on_delete=models.CASCADE, blank=True, null=True)
     status_note = models.TextField(blank=True, null=True)
     quantity = models.IntegerField()
     last_modified = models.DateTimeField(auto_now=True)
     add_date = models.DateTimeField(auto_now_add=True)
-    supplier_id = models.ForeignKey(Supplier, on_delete=models.CASCADE, blank=True, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, blank=True, null=True)
 
 
     def __str__(self):
         return self.title + ': ' + self.description
 
     def was_added_recently(self):
-        return self.first_add_date >= timezone.now() - datetime.timedelta(days=1)
+        now = timezone.now()
+
+        return now - datetime.timedelta(days=1) <= self.add_date <= now

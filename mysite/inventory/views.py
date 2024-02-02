@@ -30,12 +30,12 @@ class IndexView(generic.ListView):
 
             # 4 using in build views and redefine it as class and func in it
             return lastest_item_list;
-class TitleView(generic.DetailView):
-    mode = Item
-    template_name = "inventory/title.html"
-    # return HttpResponse("You're looking at title %s." % item_id)
+# class TitleView(generic.DetailView):
+#     model = Item
+#     template_name = "inventory/title.html"
+#     # return HttpResponse("You're looking at title %s." % item_id)
 class DescriptionView(generic.DetailView):
-    mode = Item
+    model = Item
     template_name = "inventory/description.html"
     # try:
     #     i = Item.objects.get(pk=item_id)
@@ -53,12 +53,19 @@ def set_description(request, item_id):
         raise Http404("Item does not exist")
     return HttpResponseRedirect(reverse("inventory:success"))
 class StatusView(generic.DetailView):
-    mode = Item
+    model = Item
     template_name = "inventory/status.html"
     # i = get_object_or_404(Item, pk=item_id)
     # return render(request, "inventory/status.html", {"status": i.status_id})
 
+class BoCodeView(generic.DetailView):
+    model = Item
+    template_name = "inventory/bo_code.html"
+    # i = get_object_or_404(Item, pk=item_id)
+    # return render(request, "inventory/status.html", {"status": i.status_id})
+
+
 class SuccessView(generic.DetailView):
-    mode = Item
+    model = Item
     template_name = "inventory/success.html"
     # return render(request, "inventory/success.html", {})
