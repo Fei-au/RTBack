@@ -7,6 +7,65 @@ from django.views import generic
 
 # Create your views here.
 
+def getItemInfoByCode(request, code):
+    try:
+        print('GetItemInfoByCode')
+    except:
+        print('do nothing')
+    return HttpResponse('GetItemInfoByCode success')
+def scrapInfoByBOCodel(request, code):
+    try:
+        print('scrapInfoByBOCodel')
+    except:
+        print('do nothing')
+    return HttpResponse('scrapInfoByBOCodel success')
+
+def scrapInfoByURL(request, url):
+    try:
+        print('scrapInfoByURL')
+    except:
+        print('do nothing')
+    return HttpResponse('scrapInfoByURL success')
+
+def addNewItem(request):
+    try:
+        print('addNewItem')
+        print(request.body)
+    except:
+        print('do nothing')
+    return HttpResponse('addNewItem success')
+
+def updateItem(request, id):
+    try:
+        print('updateItem')
+    except:
+        print('do nothing')
+    return HttpResponse('updateItem success')
+
+def getItem(request, id):
+    try:
+        print('getItem')
+    except:
+        print('do nothing')
+    return HttpResponse('getItem success')
+
+class GetStatusView(generic.ListView):
+    # template_name = "inventory/index.html"
+# context_object_name = "latest_item_list"
+    def get_queryset(self):
+        return  []
+class GetClassesView(generic.ListView):
+    # template_name = "inventory/index.html"
+# context_object_name = "latest_item_list"
+    def get_queryset(self):
+        return  []
+def getSizesByClassView(request, class_id):
+
+
+def get_colors_by_class(request, class_id):
+
+
+
 class IndexView(generic.ListView):
         template_name = "inventory/index.html"
         context_object_name = "latest_item_list"
