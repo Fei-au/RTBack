@@ -27,15 +27,6 @@ class Color(models.Model):
 
     def __str__(self):
         return self.name + ': ' + description
-class Item_Category(models.Model):
-    name = models.CharField(max_length=50)
-    parent_category = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
-                                        related_name='children')
-    description = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name + ': ' + description
-
 
 class Supplier(models.Model):
     name = models.CharField(max_length=45)
@@ -56,30 +47,29 @@ class Item(models.Model):
         IN_STOCK = "In stock", "In stock",
         SOLD = "Sold", "Sold",
         RETURNED = "Returned", "Returned",
-    case_number = models.CharField(max_length=4)
-    item_number = models.CharField(max_length=20)
+    case_number = models.CharField(max_length=4, default=1)
+    item_number = models.CharField(max_length=20, default=1)
     version = models.IntegerField(default=1) # The version of item number, eg: 1, 2, 3...
-    title = models.CharField(max_length=200)
+    title = models.TextField(blank=True)
     description = models.TextField(blank=True)
-    bo_code = models.CharField(max_length=45, blank=True, null=True)
+    b_code = models.CharField(max_length=45, blank=True, null=True)
     upc_code = models.CharField(max_length=45, blank=True, null=True)
     ean_code = models.CharField(max_length=45, blank=True, null=True)
     fnsku_code = models.CharField(max_length=45, blank=True, null=True)
     lpn_code = models.CharField(max_length=45, blank=True, null=True)
-    # log_number = models.CharField(max_length=45, blank=True, null=True)
-    msrp_price = models.DecimalField(max_digits=10,decimal_places=2)
-    bid_start_price = models.DecimalField(max_digits=10,decimal_places=2)
+    msrp_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
+    bid_start_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
     category = models.ForeignKey(Item_Category, on_delete=models.SET_NULL, blank=True, null=True)
     size = models.ForeignKey(Size, on_delete=models.SET_NULL, blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, blank=True, null=True)
     status = models.ForeignKey(Item_Status, on_delete=models.DO_NOTHING, blank=True, null=True)
     status_note = models.TextField(blank=True, null=True)# Status note for not new items
-    last_modified = models.DateTimeField(auto_now=True)
-    add_date = models.DateTimeField(auto_now_add=True) # First add date
+    last_modified = models.DateTimeField(auto_now=True, blank=True, null=True)
+    add_date = models.DateTimeField(auto_now_add=True, blank=True, null=True) # First add date
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
-    stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK)
-    shelf = models.IntegerField(default=1) # Shelf number of item location, eg: 1, 2, 3...
-    layer = models.CharField(max_length=1, default="A") # Shelf layer of item location, eg: A, B, C...
+    stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK,blank=True,null=True)
+    shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...
+    layer = models.CharField(max_length=1, blank=True,null=True) # Shelf layer of item location, eg: A, B, C...
     def __str__(self):
         return self.title + ': ' + self.description
 

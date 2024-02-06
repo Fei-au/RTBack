@@ -8,7 +8,7 @@ urlpatterns = [
         # 1. Have item information in database
         path("get_item_info_by_code/<str:code>", views.getItemInfoByCode, name="get_item_info_by_code"),
 
-        # 2. Have item BO number on hand
+        # 2. Have item BO number on hand.env.production
         path("scrap_info_by_bo_code/<str:code>", views.scrapInfoByBOCodel, name="scrap_info_by_bo_code"),
 
         # 3. Have item amz url on hand
@@ -25,10 +25,10 @@ urlpatterns = [
 
         # session, save case number
         # Item list content
-        path("get_status",views.GetStatusView.as_View(),name="get_status"),
-        path("get_classes", views.GetClassesView.as_View(), name="get_classes"),
-        path("get_sizes_by_class/<int:class_id>", views.GetSizesByClassView.as_View(), name="get_sizes_by_class"),
-        path("get_colors_by_class", views.GetColorsByClassView.as_View(), name="get_colors_by_class"),
+        path("get_status",views.GetStatusView.as_view(),name="get_status"),
+        path("get_categories", views.GetCategoriesView.as_view(), name="get_categories"),
+        path("get_sizes_by_category/<int:class_id>", views.GetSizesByCategoryView.as_view(), name="get_sizes_by_category"),
+        path("get_colors_by_category", views.GetColorsByCategoryView.as_view(), name="get_colors_by_category"),
 
         # Simple requests
         path("<int:pk>/description/", views.DescriptionView.as_view(), name="description"),

@@ -1,24 +1,37 @@
 from django.shortcuts import render,get_object_or_404
 from django.template import loader
-from django.http import HttpResponse, Http404,HttpResponseRedirect
+from django.http import HttpResponse, Http404,HttpResponseRedirect, JsonResponse, HttpResponseNotFound
 from .models import Item, Item_Status,Item_Category
 from django.urls import reverse
 from django.views import generic
+from django.core import serializers
+
 
 # Create your views here.
-
+# Input code
+# Output succuss if find item, return item list
+# Output not found if not find item
 def getItemInfoByCode(request, code):
     try:
-        print('GetItemInfoByCode')
-    except:
-        print('do nothing')
-    return HttpResponse('GetItemInfoByCode success')
+        print('code', code)
+        items = None
+        item = None
+        if code.startswith('B'):
+            items = Item.objects.filter(b_code=code)
+    except Item.MultipleObjectsReturned :
+        print('MultipleObjectsReturned')
+    except Item.DoesNotExist:
+        print('DoesNotExist')
+    if len(items) == 0:
+        return JsonResponse({'status': 'not found'})
+    else:
+        return JsonResponse({'status': "success", 'data': serializers.serialize('json', items)})
 def scrapInfoByBOCodel(request, code):
     try:
         print('scrapInfoByBOCodel')
     except:
         print('do nothing')
-    return HttpResponse('scrapInfoByBOCodel success')
+    return HttpResponseNotFound("hello")
 
 def scrapInfoByURL(request, url):
     try:
@@ -34,6 +47,15 @@ def addNewItem(request):
     except:
         print('do nothing')
     return HttpResponse('addNewItem success')
+
+def deleteItem(request):
+    try:
+        print('deleteItem')
+        print(request.body)
+    except:
+        print('do nothing')
+    return HttpResponse('deleteItem success')
+
 
 def updateItem(request, id):
     try:
@@ -54,16 +76,27 @@ class GetStatusView(generic.ListView):
 # context_object_name = "latest_item_list"
     def get_queryset(self):
         return  []
-class GetClassesView(generic.ListView):
+class GetCategoriesView(generic.ListView):
     # template_name = "inventory/index.html"
 # context_object_name = "latest_item_list"
     def get_queryset(self):
         return  []
-def getSizesByClassView(request, class_id):
+class GetSizesByCategoryView(generic.ListView):
+    # model = Article
+    # template_name = 'articles/article_list.html'
+    def get_queryset(self):
+        queryset = super().get_queryset()  # Get the original queryset
+        category = self.request.GET.get('category')  # Get the 'category' query parameter
 
+        return  []
 
-def get_colors_by_class(request, class_id):
-
+class GetColorsByCategoryView(generic.ListView):
+    # model = Article
+    # template_name = 'articles/article_list.html'
+    def get_queryset(self):
+        queryset = super().get_queryset()  # Get the original queryset
+        category = self.request.GET.get('category')  # Get the 'category' query parameter
+        return  []
 
 
 class IndexView(generic.ListView):
