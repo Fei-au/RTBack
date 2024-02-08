@@ -1,10 +1,11 @@
 from django.shortcuts import render,get_object_or_404
 from django.template import loader
-from django.http import HttpResponse, Http404,HttpResponseRedirect, JsonResponse, HttpResponseNotFound
+from django.http import HttpResponse, Http404,HttpResponseRedirect, JsonResponse, HttpResponseNotFound, HttpResponseServerError
 from .models import Item, Item_Status,Item_Category
 from django.urls import reverse
 from django.views import generic
 from django.core import serializers
+from .services  import scrap
 
 
 # Create your views here.
@@ -23,15 +24,21 @@ def getItemInfoByCode(request, code):
     except Item.DoesNotExist:
         print('DoesNotExist')
     if len(items) == 0:
-        return JsonResponse({'status': 'not found'})
+        return JsonResponse({'status': 'not found', 'message': 'Code '+code+'not found in database.'})
     else:
         return JsonResponse({'status': "success", 'data': serializers.serialize('json', items)})
-def scrapInfoByBOCodel(request, code):
-    try:
-        print('scrapInfoByBOCodel')
-    except:
-        print('do nothing')
-    return HttpResponseNotFound("hello")
+def scrapInfoByBOCode(request, code):
+        result = scrap(code)
+        print('result', result)
+        if result.status == 1:
+            return HttpResponse({'status': 'success', 'data': result.data})
+        elif result.status == 0:
+            return HttpResponse({'status': 'not found', 'message': result.message})
+        elif result.status == 2:
+            return  HttpResponseServerError(result.message)
+        else:
+            return  HttpResponseServerError("Server Error, please contact developer.")
+
 
 def scrapInfoByURL(request, url):
     try:

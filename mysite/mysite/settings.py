@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['192.168.2.79',]
 
 INSTALLED_APPS = [
     'inventory.apps.InventoryConfig',
+    'staff.apps.StaffConfig',
 'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',

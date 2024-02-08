@@ -13,8 +13,8 @@ class Item_Category(models.Model):
 
 class Size(models.Model):
     name = models.CharField(max_length=50)
-    parent_size = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
-                                        related_name='children')
+    parent_size = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,related_name='children')
+    category = models.ForeignKey(Item_Category,on_delete=models.CASCADE)
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -33,7 +33,7 @@ class Supplier(models.Model):
     email = models.CharField(max_length=128, blank=True, null=True)
     address = models.CharField(max_length=150, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
-    added_date = models.DateField(auto_now_add=True)
+    added_date = models.DateField(default=datetime.date.today)
     def __str__(self):
         return self.name + ': ' + address
 
@@ -60,12 +60,15 @@ class Item(models.Model):
     msrp_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
     bid_start_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
     category = models.ForeignKey(Item_Category, on_delete=models.SET_NULL, blank=True, null=True)
-    size = models.ForeignKey(Size, on_delete=models.SET_NULL, blank=True, null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, blank=True, null=True)
+    standard_size = models.ForeignKey(Size, on_delete=models.SET_NULL, blank=True, null=True)
+    customize_size = models.CharField(max_length=30, blank=True, null=True)
+    standard_color = models.ForeignKey(Color, on_delete=models.SET_NULL, blank=True, null=True)
+    customize_color = models.CharField(max_length=30, blank=True, null=True)
     status = models.ForeignKey(Item_Status, on_delete=models.DO_NOTHING, blank=True, null=True)
     status_note = models.TextField(blank=True, null=True)# Status note for not new items
     last_modified = models.DateTimeField(auto_now=True, blank=True, null=True)
     add_date = models.DateTimeField(auto_now_add=True, blank=True, null=True) # First add date
+    add_staff = models.ForeignKey('staff.Profile', on_delete=models.DO_NOTHING, blank=True, null=True) # Staff who add the item
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
     stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK,blank=True,null=True)
     shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...

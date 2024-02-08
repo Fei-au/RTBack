@@ -8,11 +8,11 @@ urlpatterns = [
         # 1. Have item information in database
         path("get_item_info_by_code/<str:code>", views.getItemInfoByCode, name="get_item_info_by_code"),
 
-        # 2. Have item BO number on hand.env.production
-        path("scrap_info_by_bo_code/<str:code>", views.scrapInfoByBOCodel, name="scrap_info_by_bo_code"),
+        # 2. Have item BO number on hand, scrap in amz .env.production
+        path("scrap_info_by_bo_code/<str:code>", views.scrapInfoByBOCode, name="scrap_info_by_bo_code"),
 
         # 3. Have item amz url on hand
-        path("scrap_info_by_url/<str:url>", views.scrapInfoByURL  , name="scrap_info_by_url"),
+        # path("scrap_info_by_url/<str:url>", views.scrapInfoByURL  , name="scrap_info_by_url"),
 
         # Dowmload images by urls
         # path("download_images_by_urls", views.DownloadImagesByUrlsView.    as_view(), name="download_images_by_urls"),
