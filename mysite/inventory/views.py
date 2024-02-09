@@ -4,8 +4,12 @@ from django.http import HttpResponse, Http404,HttpResponseRedirect, JsonResponse
 from .models import Item, Item_Status,Item_Category
 from django.urls import reverse
 from django.views import generic
-from django.core import serializers
+# from django.core import serializers
 from .services  import scrap
+from django.db.models import Q
+from django.forms.models import model_to_dict
+
+
 
 
 # Create your views here.
@@ -13,29 +17,33 @@ from .services  import scrap
 # Output succuss if find item, return item list
 # Output not found if not find item
 def getItemInfoByCode(request, code):
-    try:
-        print('code', code)
         items = None
-        item = None
         if code.startswith('B'):
             items = Item.objects.filter(b_code=code)
-    except Item.MultipleObjectsReturned :
-        print('MultipleObjectsReturned')
-    except Item.DoesNotExist:
-        print('DoesNotExist')
-    if len(items) == 0:
-        return JsonResponse({'status': 'not found', 'message': 'Code '+code+'not found in database.'})
-    else:
-        return JsonResponse({'status': "success", 'data': serializers.serialize('json', items)})
+        elif code.startswith('X'):
+            items = Item.objects.filter(fnsku_code=code)
+        elif code.startswith('LPN'):
+            items = Item.objects.filter(lpn_code=code)
+        elif code.isdigit:
+            items = Item.objects.filter(Q(upc_code=code) | Q(ean_code=code))
+        else:
+            return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not stored in database.'})
+        if len(items) == 0:
+            if code.startswith('B'):
+                return scrapInfoByBOCode(request, code)
+            return JsonResponse({'status': 'not found', 'message': 'Code '+code+' not found in database.'})
+        else:
+            return JsonResponse({'status': "success", 'data': model_to_dict(items[0])})
 def scrapInfoByBOCode(request, code):
         result = scrap(code)
         print('result', result)
-        if result.status == 1:
-            return HttpResponse({'status': 'success', 'data': result.data})
-        elif result.status == 0:
-            return HttpResponse({'status': 'not found', 'message': result.message})
-        elif result.status == 2:
-            return  HttpResponseServerError(result.message)
+        if result['status'] == 1:
+            print('here 1')
+            return JsonResponse({'status': 'success', 'data': result['data']})
+        elif result['status'] == 0:
+            return JsonResponse({'status': 'not found', 'message': result['message']})
+        elif result['status'] == 2:
+            return  HttpResponseServerError(result['message'])
         else:
             return  HttpResponseServerError("Server Error, please contact developer.")
 
@@ -113,6 +121,7 @@ class IndexView(generic.ListView):
             # Get the fisrt 100 items in recent added item list.
 
             lastest_item_list = Item.objects.order_by("-add_date")[:100]
+
             # context = {
             #     "lastest_item_list": lastest_item_list,
             # }

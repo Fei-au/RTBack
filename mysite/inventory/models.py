@@ -6,27 +6,27 @@ from django.utils  import timezone
 class Item_Category(models.Model):
     name = models.CharField(max_length=50)
     parent_category = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.name + ': ' + description
+        return self.name
 
 class Size(models.Model):
     name = models.CharField(max_length=50)
     parent_size = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,related_name='children')
     category = models.ForeignKey(Item_Category,on_delete=models.CASCADE)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.name + ': ' + description
+        return self.name + ': ' + self.description
 class Color(models.Model):
     name = models.CharField(max_length=50)
     parent_color = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
                                         related_name='children')
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.name + ': ' + description
+        return self.name + ': ' + self.description
 
 class Supplier(models.Model):
     name = models.CharField(max_length=45)
