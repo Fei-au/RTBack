@@ -1,8 +1,17 @@
 import datetime
 from django.db import models
 from django.utils  import timezone
+import os
+import logging
+
 # Create your models here.
 
+
+def upload_to(instance, filename):
+    # Format the current date as YYYYMMDD
+    date_prefix = datetime.datetime.now().strftime('%Y%m%d')
+    # Return the path with the date prefix and the original filename
+    return f'image/{date_prefix}/{filename}'
 class Item_Category(models.Model):
     name = models.CharField(max_length=50)
     parent_category = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
@@ -41,6 +50,7 @@ class Item_Status(models.Model):
     status = models.CharField(max_length=40)
     def __str__(self):
         return self.status
+
 
 class Item(models.Model):
     class StockStatus(models.TextChoices):
@@ -82,6 +92,18 @@ class Item(models.Model):
         return now - datetime.timedelta(days=1) <= self.add_date <= now
 
 
+class Image(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='images', blank=True, null=True)
+    local_image = models.ImageField(upload_to=upload_to, blank=True, null=True);
+    external_url = models.URLField(max_length=255, blank=True, null=True);
+
+    # def __str__(self):
+    #     return f"Image for {self.item.title}"
+    def delete(self, *args, **kwargs):
+        if self.local_image:
+            if os.path.isfile(self.local_image.path):
+                os.remove(self.local_image.path)
+        super().delete(*args, **kwargs)
 
 
 class Order(models.Model):

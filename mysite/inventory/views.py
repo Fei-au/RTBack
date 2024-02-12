@@ -1,13 +1,15 @@
 from django.shortcuts import render,get_object_or_404
 from django.template import loader
 from django.http import HttpResponse, Http404,HttpResponseRedirect, JsonResponse, HttpResponseNotFound, HttpResponseServerError
-from .models import Item, Item_Status,Item_Category
+from .models import Item, Item_Status,Item_Category, Image
 from django.urls import reverse
 from django.views import generic
-# from django.core import serializers
-from .services  import scrap
+from django.core import serializers
+from .services  import scrap, download_image
 from django.db.models import Q
 from django.forms.models import model_to_dict
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -86,32 +88,35 @@ def getItem(request, id):
         print('do nothing')
     return HttpResponse('getItem success')
 
-class GetStatusView(generic.ListView):
-    # template_name = "inventory/index.html"
-# context_object_name = "latest_item_list"
-    def get_queryset(self):
-        return  []
-class GetCategoriesView(generic.ListView):
-    # template_name = "inventory/index.html"
-# context_object_name = "latest_item_list"
-    def get_queryset(self):
-        return  []
-class GetSizesByCategoryView(generic.ListView):
-    # model = Article
-    # template_name = 'articles/article_list.html'
-    def get_queryset(self):
-        queryset = super().get_queryset()  # Get the original queryset
-        category = self.request.GET.get('category')  # Get the 'category' query parameter
-
-        return  []
-
-class GetColorsByCategoryView(generic.ListView):
-    # model = Article
-    # template_name = 'articles/article_list.html'
-    def get_queryset(self):
-        queryset = super().get_queryset()  # Get the original queryset
-        category = self.request.GET.get('category')  # Get the 'category' query parameter
-        return  []
+# class GetStatusView(generic.ListView):
+#     # template_name = "inventory/index.html"
+# # context_object_name = "latest_item_list"
+#     list = Item_Status.objects.all();
+#     return JsonResponse({'status': "success", 'data': model_to_dict(items[0])})
+#
+#     def get_queryset(self):
+#         return  []
+# class GetCategoriesView(generic.ListView):
+#     # template_name = "inventory/index.html"
+# # context_object_name = "latest_item_list"
+#     def get_queryset(self):
+#         return  []
+# class GetSizesByCategoryView(generic.ListView):
+#     # model = Article
+#     # template_name = 'articles/article_list.html'
+#     def get_queryset(self):
+#         queryset = super().get_queryset()  # Get the original queryset
+#         category = self.request.GET.get('category')  # Get the 'category' query parameter
+#
+#         return  []
+#
+# class GetColorsByCategoryView(generic.ListView):
+#     # model = Article
+#     # template_name = 'articles/article_list.html'
+#     def get_queryset(self):
+#         queryset = super().get_queryset()  # Get the original queryset
+#         category = self.request.GET.get('category')  # Get the 'category' query parameter
+#         return  []
 
 
 class IndexView(generic.ListView):
@@ -142,38 +147,50 @@ class IndexView(generic.ListView):
 #     model = Item
 #     template_name = "inventory/title.html"
 #     # return HttpResponse("You're looking at title %s." % item_id)
-class DescriptionView(generic.DetailView):
-    model = Item
-    template_name = "inventory/description.html"
-    # try:
-    #     i = Item.objects.get(pk=item_id)
-    # except Item.DoesNotExist:
-    #     raise Http404("Item does not exist")
-    # return render(request, "inventory/description.html", {"item": i})
-def set_description(request, item_id):
-    try:
-        # The request is a POST request, get the post request field named description
-        des = request.POST['description']
-        i = get_object_or_404(Item, pk=item_id)
-        i.description = des
-        i.save();
-    except Item.DoesNotExist:
-        raise Http404("Item does not exist")
-    return HttpResponseRedirect(reverse("inventory:success"))
-class StatusView(generic.DetailView):
-    model = Item
+
+
+# def set_description(request, item_id):
+#     try:
+#         # The request is a POST request, get the post request field named description
+#         des = request.POST['description']
+#         i = get_object_or_404(Item, pk=item_id)
+#         i.description = des
+#         i.save();
+#     except Item.DoesNotExist:
+#         raise Http404("Item does not exist")
+#     return HttpResponseRedirect(reverse("inventory:success"))
+class StatusView(generic.ListView):
+    model = Item_Status
     template_name = "inventory/status.html"
-    # i = get_object_or_404(Item, pk=item_id)
-    # return render(request, "inventory/status.html", {"status": i.status_id})
-
-class BoCodeView(generic.DetailView):
-    model = Item
-    template_name = "inventory/bo_code.html"
-    # i = get_object_or_404(Item, pk=item_id)
-    # return render(request, "inventory/status.html", {"status": i.status_id})
+    def get(self, request, *args, **kwargs):
+        items = Item_Status.objects.all().values('status');
+        l = [d ['status'] for d in items]
+        return JsonResponse(l, safe=False);
 
 
-class SuccessView(generic.DetailView):
-    model = Item
-    template_name = "inventory/success.html"
-    # return render(request, "inventory/success.html", {})
+class CategoryView(generic.ListView):
+    model = Item_Category
+    template_name = "inventory/status.html"
+
+    # def get(self, request, *args, **kwargs):
+    #     list = Item_Category.objects.all();
+    #     print(list[0])
+    #     # print('here')
+    #     # data = serializers.serialize('json', list)
+    #     return HttpResponse();
+
+        # return JsonResponse(data, safe=false);
+
+
+def addImage(request):
+    item_instance = Item(id=553)
+    image_instance = Image(item=item_instance)
+    image_instance.external_url = 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg'
+    download_image(image_instance, 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg')
+    return HttpResponse(image_instance.id)
+
+@csrf_exempt
+def deleteImage(request, pk):
+    image_instance = Image.objects.get(pk=pk)
+    image_instance.delete()
+    return HttpResponse('success')

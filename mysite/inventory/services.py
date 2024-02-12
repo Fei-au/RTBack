@@ -7,8 +7,14 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from .models import Item_Category
+from .models import Item_Category, Item, Image
 from utils.currency import string_to_float_decimal
+from django.core.files.base import ContentFile
+from django.core.files.temp import NamedTemporaryFile
+from utils.file import get_extension_from_url
+from django.conf import settings
+from urllib.parse import urljoin
+
 
 
 def get_image_urls(url):
@@ -64,46 +70,46 @@ def get_image_urls(url):
             # Close the browser when done
             driver.quit()
 
-def download_images(image_urls, lot):
-    # Folder where you want to save the images
-    save_folder = PHOTO_FOLDER
-    auction_num = AUCTION_NUM
-    prefix = ''
-
-    digits = int(math.log10(int(lot))) + 1
-    if digits == 1:
-        prefix = '000'
-    elif digits == 2:
-        prefix = '00'
-    elif digits == 3:
-        prefix = '0'
-
-    # change_and_print_number(f"{auction_num}{prefix}{lot}")
-
-    # Check if the folder exists, if not, create it
-    if not os.path.exists(save_folder):
-        os.makedirs(save_folder)
-
-    # Loop through the image URLs and download the images
-    for i, image_url in enumerate(image_urls):
-        response = requests.get(image_url, stream=True)
-        if response.status_code == 200:
-            # Get the file extension from the URL
-            file_extension = image_url.split(".")[-1]
-            # Save the image to the specified folder
-            image_name = os.path.join(save_folder, f"{auction_num}{prefix}{lot}_{str(i+1)}.{file_extension}")
-            with open(image_name, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            print("Image {} downloaded and saved as {}".format(i + 1, image_name))
-
-    return True
+# def download_images(image_urls, lot):
+#     # Folder where you want to save the images
+#     save_folder = PHOTO_FOLDER
+#     auction_num = AUCTION_NUM
+#     prefix = ''
+#
+#     digits = int(math.log10(int(lot))) + 1
+#     if digits == 1:
+#         prefix = '000'
+#     elif digits == 2:
+#         prefix = '00'
+#     elif digits == 3:
+#         prefix = '0'
+#
+#     # change_and_print_number(f"{auction_num}{prefix}{lot}")
+#
+#     # Check if the folder exists, if not, create it
+#     if not os.path.exists(save_folder):
+#         os.makedirs(save_folder)
+#
+#     # Loop through the image URLs and download the images
+#     for i, image_url in enumerate(image_urls):
+#         response = requests.get(image_url, stream=True)
+#         if response.status_code == 200:
+#             # Get the file extension from the URL
+#             file_extension = image_url.split(".")[-1]
+#             # Save the image to the specified folder
+#             image_name = os.path.join(save_folder, f"{auction_num}{prefix}{lot}_{str(i+1)}.{file_extension}")
+#             with open(image_name, 'wb') as f:
+#                 for chunk in response.iter_content(chunk_size=8192):
+#                     f.write(chunk)
+#             print("Image {} downloaded and saved as {}".format(i + 1, image_name))
+#
+#     return True
 
 
 def get_title(soup):
     span = soup.find('span', id='productTitle')
     if span:
-        return span.text
+        return span.text.replace('\n', '').strip()
     meta = soup.find('meta', name='title')
     if meta:
         return meta['content']
@@ -112,14 +118,14 @@ def get_title(soup):
         return meta2['content']
     title = soup.find('title')
     if title:
-        return title.text
+        return title.text.replace('\n', '').strip()
     div = soup.find['titleSection']
     if div:
         h1 = div.find('h1', id='title')
         if h1:
             span_with_class = h1.find('span', class_='product-title-word-break')
             if span_with_class:
-                return span_with_class.text
+                return span_with_class.text.replace('\n', '').strip()
     return None
 
 
@@ -174,17 +180,27 @@ def get_color(soup):
     if div_with_id:
         spans = div_with_id.find_all('span', class_='selection')
         if spans:
-            return  spans[0].text
+            return  spans[0].text.replace('\n', '').strip()
     return None
 
 def get_price(soup):
     span = soup.find('span',class_='a-price a-text-price a-size-medium apexPriceToPay')
+    print('span', span)
     if span:
         s = span.find('span')
+        print('return', s.text)
         return s.text
-    span = soup.find('span', id='tp_price_block_total_price_ww')
-    if span:
-        s = span.find('span')
+    span2 = soup.find('span', id='tp_price_block_total_price_ww')
+    print('span2', span2)
+    if span2:
+        s = span2.find('span')
+        print('return2', s.text)
+        return string_to_float_decimal(s.text[1:])
+    span3 = soup.find('span', id='tp-tool-tip-subtotal-price-value')
+    print('span3', span3)
+    if span3:
+        s = span3.find('span')
+        print('return2', s.text)
         return string_to_float_decimal(s.text[1:])
     return None
 
@@ -220,9 +236,27 @@ class TestResponse:
         self.status_code = status_code
         self.text = text
 
+def download_image(image_url):
+    image_instance = Image()
+    extension = get_extension_from_url(image_url)
+    image_instance.external_url = image_url
+    response = requests.get(image_instance.external_url)
+    if response.status_code == 200:
+        # Create a temporary file
+        img_temp = NamedTemporaryFile()
+        img_temp.write(response.content)
+        img_temp.flush()
+        img_temp.seek(0)
+        # Load the content into a Django File
+        img_file = ContentFile(img_temp.read(), name='temp_name'+extension)
+        # Save the image to the model's ImageField
+        image_instance.local_image.save(img_file.name, img_file, save=True)
+        image_instance.save()
+        img_temp.close()
+        return  image_instance
 def scrap(code):
     # try:
-        test = True
+        test = False
         response = None
         url = 'https://amazon.ca/dp/' + code + "/"
         if test:
@@ -241,9 +275,13 @@ def scrap(code):
             ean_code = None
             fnksu_code = None
             lpn_code = None
-            pics = [] if test else get_image_urls(url)
+            pics = []
+            if not test:
+                urls = get_image_urls(url)
+                for u in urls:
+                    img_instance = download_image(u)
+                    pics.append(urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url))
             cls =get_clses(soup)
-
             customize_color = get_color(soup)
             price = get_price(soup)
             bid_start_price = None
