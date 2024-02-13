@@ -13,7 +13,7 @@ urlpatterns = [
         path("scrap_info_by_bo_code/<str:code>", views.scrapInfoByBOCode, name="scrap_info_by_bo_code"),
 
         # 3. Have item amz url on hand
-        # path("scrap_info_by_url/<str:url>", views.scrapInfoByURL  , name="scrap_info_by_url"),
+        path("scrap_info_by_url/<str:url>", views.scrapInfoByURL  , name="scrap_info_by_url"),
 
         # Dowmload images by urls
         # path("download_images_by_urls", views.DownloadImagesByUrlsView.    as_view(), name="download_images_by_urls"),

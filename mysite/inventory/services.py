@@ -14,6 +14,7 @@ from django.core.files.temp import NamedTemporaryFile
 from utils.file import get_extension_from_url
 from django.conf import settings
 from urllib.parse import urljoin
+import re
 
 
 
@@ -149,7 +150,7 @@ def get_clses(soup):
     if a_tags:
         clses = []
         parent_cate = None
-        for a in a_tags[:2]:
+        for a in a_tags[:1]:
             text = a.text.replace('\n', '').strip()
             cates = None
             try:
@@ -184,24 +185,32 @@ def get_color(soup):
     return None
 
 def get_price(soup):
-    span = soup.find('span',class_='a-price a-text-price a-size-medium apexPriceToPay')
-    print('span', span)
+    span = soup.find('span',class_='priceToPay')
+    # span = soup.find('span',class_='a-price aok-align-center reinventPricePriceToPayMargin priceToPay')
     if span:
-        s = span.find('span')
-        print('return', s.text)
-        return s.text
-    span2 = soup.find('span', id='tp_price_block_total_price_ww')
-    print('span2', span2)
-    if span2:
-        s = span2.find('span')
-        print('return2', s.text)
         return string_to_float_decimal(s.text[1:])
-    span3 = soup.find('span', id='tp-tool-tip-subtotal-price-value')
-    print('span3', span3)
-    if span3:
-        s = span3.find('span')
-        print('return2', s.text)
-        return string_to_float_decimal(s.text[1:])
+    span = soup.find('span', class_='a-price-whole')
+    if span:
+        return string_to_float_decimal(span.text)
+    spans = soup.find_all('span', class_='apexPriceToPay')
+    # For price pattern like $18.30 - $20.55, return highest price
+    if spans:
+        if len(spans) > 1:
+            span = spans[-1]
+            s = span.find('span', class_='a-offscreen')
+            if s:
+                return string_to_float_decimal(s.text[1:])
+        else:
+            span = spans.find('span', class_='a-offscreen')
+            if span:
+                return string_to_float_decimal(s.text[1:])
+
+    # span = soup.find('span', id='tp-tool-tip-subtotal-price-value')
+    # print('span3', span3)
+    # if span3:
+    #     s = span3.find('span')
+    #     print('return2', s.text)
+    #     return string_to_float_decimal(s.text[1:])
     return None
 
 def get_bid_start_price(price):
@@ -254,11 +263,24 @@ def download_image(image_url):
         image_instance.save()
         img_temp.close()
         return  image_instance
-def scrap(code):
+
+def getUrl(code):
+    return 'https://amazon.ca/dp/' + code + "/"
+
+def getCodeByUrl(url):
+    match = re.search(r"dp\/([^\/]+)", url)
+    if match:
+        result = match.group(1)
+        return result
+    else:
+        return None
+
+def scrap(url, code):
     # try:
-        test = False
+        if not code:
+            code =getCodeByUrl(url)
+        test = True
         response = None
-        url = 'https://amazon.ca/dp/' + code + "/"
         if test:
             f = open('inventory/test', 'r', encoding='utf-8')
             response = TestResponse(200, f.read())

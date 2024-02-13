@@ -5,10 +5,15 @@ from .models import Item, Item_Status,Item_Category, Image
 from django.urls import reverse
 from django.views import generic
 from django.core import serializers
-from .services  import scrap, download_image
+from .services  import scrap, download_image, getUrl
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
+from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer
+from django.views.decorators.http import require_POST
+from rest_framework.parsers import JSONParser
+
+
 
 
 
@@ -29,18 +34,21 @@ def getItemInfoByCode(request, code):
         elif code.isdigit:
             items = Item.objects.filter(Q(upc_code=code) | Q(ean_code=code))
         else:
+            print('here')
             return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not stored in database.'})
         if len(items) == 0:
             if code.startswith('B'):
                 return scrapInfoByBOCode(request, code)
+            print('here2')
             return JsonResponse({'status': 'not found', 'message': 'Code '+code+' not found in database.'})
         else:
             return JsonResponse({'status': "success", 'data': model_to_dict(items[0])})
+
 def scrapInfoByBOCode(request, code):
-        result = scrap(code)
+        url = getUrl(code)
+        result = scrap(url, code)
         print('result', result)
         if result['status'] == 1:
-            print('here 1')
             return JsonResponse({'status': 'success', 'data': result['data']})
         elif result['status'] == 0:
             return JsonResponse({'status': 'not found', 'message': result['message']})
@@ -52,17 +60,35 @@ def scrapInfoByBOCode(request, code):
 
 def scrapInfoByURL(request, url):
     try:
-        print('scrapInfoByURL')
+        result = scrap(url)
+        print('result', result)
+        if result['status'] == 1:
+            return JsonResponse({'status': 'success', 'data': result['data']})
+        elif result['status'] == 0:
+            return JsonResponse({'status': 'not found', 'message': result['message']})
+        elif result['status'] == 2:
+            return HttpResponseServerError(result['message'])
+        else:
+            return HttpResponseServerError("Server Error, please contact developer.")
     except:
-        print('do nothing')
-    return HttpResponse('scrapInfoByURL success')
+        return HttpResponseServerError('scrapInfoByURL failed, error happen in server')
 
+
+@require_POST
+@csrf_exempt
 def addNewItem(request):
     try:
-        print('addNewItem')
-        print(request.body)
-    except:
-        print('do nothing')
+        data = JSONParser().parse(request)
+        print('data', data)
+        serializer = ItemSerializer(data=data)
+
+        if(serializer).is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=201)
+        else:
+            print(serializer.errors)
+    except  Exception as err:
+        print('err', err)
     return HttpResponse('addNewItem success')
 
 def deleteItem(request):
@@ -163,14 +189,21 @@ class StatusView(generic.ListView):
     model = Item_Status
     template_name = "inventory/status.html"
     def get(self, request, *args, **kwargs):
-        items = Item_Status.objects.all().values('status');
-        l = [d ['status'] for d in items]
+        items = Item_Status.objects.all().values('status', 'id');
+        l = []
+        for item in items:
+            l.append(ItemStatusSerializer(item).data);
         return JsonResponse(l, safe=False);
 
 
 class CategoryView(generic.ListView):
     model = Item_Category
     template_name = "inventory/status.html"
+    def get(self, request, *args, **kwargs):
+        items = Item_Category.objects.all().values('name', 'id');
+        return JsonResponse(list(items), safe=False);
+
+
 
     # def get(self, request, *args, **kwargs):
     #     list = Item_Category.objects.all();

@@ -57,8 +57,8 @@ class Item(models.Model):
         IN_STOCK = "In stock", "In stock",
         SOLD = "Sold", "Sold",
         RETURNED = "Returned", "Returned",
-    case_number = models.CharField(max_length=4, default=1)
-    item_number = models.CharField(max_length=20, default=1)
+    case_number = models.CharField(max_length=12, default=1)
+    item_number = models.CharField(max_length=20, default=1, blank=True, null=True)
     version = models.IntegerField(default=1) # The version of item number, eg: 1, 2, 3...
     title = models.TextField(blank=True)
     description = models.TextField(blank=True)
