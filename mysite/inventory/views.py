@@ -10,8 +10,17 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer
+from staff.serializers import ProfileSerializer
 from django.views.decorators.http import require_POST
 from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
+from rest_framework.exceptions import APIException, ValidationError
+from staff.models import Profile
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser
+
+
 
 
 
@@ -23,6 +32,7 @@ from rest_framework.parsers import JSONParser
 # Input code
 # Output succuss if find item, return item list
 # Output not found if not find item
+@api_view(['GET'])
 def getItemInfoByCode(request, code):
         items = None
         if code.startswith('B'):
@@ -42,8 +52,17 @@ def getItemInfoByCode(request, code):
             print('here2')
             return JsonResponse({'status': 'not found', 'message': 'Code '+code+' not found in database.'})
         else:
-            return JsonResponse({'status': "success", 'data': model_to_dict(items[0])})
+            serialize_item = ItemSerializer(items[0])
+            # return Response({'status': "success", 'data': serialize_item.data})
 
+            d = serialize_item.data
+            print('*****',d)
+            d_cate = Item_Category.objects.get(id=int(d['category_id']))
+            d['category'] = {
+                'id': str(d_cate.id),
+                'name': d_cate.name,
+            }
+            return Response({'status': "success", 'data': d})
 def scrapInfoByBOCode(request, code):
         url = getUrl(code)
         result = scrap(url, code)
@@ -73,23 +92,47 @@ def scrapInfoByURL(request, url):
     except:
         return HttpResponseServerError('scrapInfoByURL failed, error happen in server')
 
-
-@require_POST
 @csrf_exempt
+@parser_classes([FileUploadParser])
 def addNewItem(request):
+    # Get staff last issued item number
     try:
-        data = JSONParser().parse(request)
-        print('data', data)
-        serializer = ItemSerializer(data=data)
-
-        if(serializer).is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=201)
-        else:
-            print(serializer.errors)
-    except  Exception as err:
+        print('here')
+        print('here', request)
+        print('here', request.data)
+        if 'item' in request.FILES:
+            itm = request.FILES['item']
+            stf = Profile.objects.get(user_id=itm['add_staff_id'])
+            # Set staff last issued number + 1 to new added item number
+            data = itm.copy()
+            if stf.last_issued_number + 1 <= stf.item_end:
+                data['item_number'] = stf.last_issued_number + 1
+            else:
+                raise  ValidationError(detail="Item number has reach the staff's limit, please contact admin")
+            # Serialize data and save it
+            serializer_itm = ItemSerializer(data=data)
+            serializer_stf = ProfileSerializer(stf, data={'last_issued_number': stf.last_issued_number + 1},partial=True)
+            if serializer_itm.is_valid() and serializer_stf.is_valid():
+                serializer_itm.save()
+                serializer_stf.save()
+                # Add images to the
+                if 'pics' in request.FILES:
+                    pics = request.FILES['pics']
+                    for pic in pics:
+                        if pic['has_saved']:
+                            set_image_fk(pic['id'], serializer_itm.id)
+                        else:
+                            create_img_with_fk({'uri': pic['url'], 'type': pic['type']})
+                    return Response(serializer_itm.data, status=201)
+                raise ValidationError('Item has been saved, but image missed.')
+            else:
+                print('err1', serializer_itm.errors)
+                print('err2', serializer_stf.errors)
+                raise  ValidationError()
+    except Exception as err:
         print('err', err)
-    return HttpResponse('addNewItem success')
+        raise APIException()
+
 
 def deleteItem(request):
     try:
@@ -185,23 +228,23 @@ class IndexView(generic.ListView):
 #     except Item.DoesNotExist:
 #         raise Http404("Item does not exist")
 #     return HttpResponseRedirect(reverse("inventory:success"))
-class StatusView(generic.ListView):
+
+class StatusView(APIView):
     model = Item_Status
     template_name = "inventory/status.html"
-    def get(self, request, *args, **kwargs):
+    def get(self, request, format=None):
         items = Item_Status.objects.all().values('status', 'id');
-        l = []
-        for item in items:
-            l.append(ItemStatusSerializer(item).data);
-        return JsonResponse(l, safe=False);
+        serialize_sts = ItemStatusSerializer(items, many=True)
+        return Response(serialize_sts.data);
 
 
-class CategoryView(generic.ListView):
+class CategoryView(APIView):
     model = Item_Category
     template_name = "inventory/status.html"
-    def get(self, request, *args, **kwargs):
+    def get(self, request, format=None):
         items = Item_Category.objects.all().values('name', 'id');
-        return JsonResponse(list(items), safe=False);
+        serialize_cates = ItemCategorySerializer(items, many=True)
+        return Response(serialize_cates.data)
 
 
 

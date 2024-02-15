@@ -18,6 +18,6 @@ class Profile(models.Model):
     # Following are the settings of warehouse staff labelling item using customized bar code
     item_start=models.IntegerField(blank=True, null=True)
     item_end=models.IntegerField(blank=True, null=True)
-    item_version=models.IntegerField(blank=True, null=True)
+    item_version=models.CharField(max_length=4, blank=True, null=True)
     last_issued_number=models.IntegerField(blank=True, null=True)
-    last_modify_number_date=models.DateField(blank=True, null=True)
+    last_modify_number_date=models.DateField(blank=True, null=True, default=datetime.date.today)

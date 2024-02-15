@@ -2,28 +2,42 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .serializers import UserSerializer, ProfileSerializer
 from .models import Profile
-
 # Create your views here.
-@require_POST
 @csrf_exempt
+@api_view(['POST'])
 def creatUser(request):
     username = request.POST.get('username')
     password = request.POST.get('password')
     email = request.POST.get('email')
     is_staff = request.POST.get('is_staff')
+    item_start = request.POST.get('item_start')
+    item_end = request.POST.get('item_end')
+    item_version = request.POST.get('item_version')
+    last_issued_number = request.POST.get('last_issued_number')
     if not User.objects.filter(username=username).exists():
         u = User.objects.create_user(username, email, password, is_staff=is_staff, is_active=True)
         if is_staff:
-            return creatStaff(request, u)
+            return creatStaff(request._request, u, {
+                "item_start": item_start,
+                "item_end": item_end,
+                "item_version": item_version,
+                "last_issued_number": last_issued_number,
+            })
         return JsonResponse(u, status=201)
     else:
         return HttpResponse("Username already exists.", status=400)
-@require_POST
 @csrf_exempt
-def creatStaff(request, user):
-    staff = Profile(user=user)
+@api_view(['POST'])
+def creatStaff(request, user, data):
+    staff = Profile(user=user, item_start=data['item_start'], item_end=data['item_end'],item_version=data['item_version'],last_issued_number=data['last_issued_number'],)
+    print('staff', staff)
     staff.save()
-    return Response({'user':user, 'staff': staff}, status=201)
+    print('here')
+    serializer_user = UserSerializer(user)
+    serializer_staff = ProfileSerializer(staff)
+    return Response({'user': serializer_user.data, 'staff': serializer_staff.data}, status=201)

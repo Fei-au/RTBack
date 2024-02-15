@@ -9,8 +9,8 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = '__all__'
 
-    def create(self, validated_data):
-        validated_data['item_numer'] = get_next_item_number(validated_data.staff_id)
+    # def create(self, validated_data):
+    #     validated_data['item_numer'] = get_next_item_number(validated_data.staff_id)
 
 
 class ItemStatusSerializer(serializers.ModelSerializer):

@@ -149,25 +149,31 @@ def get_clses(soup):
     a_tags = soup.find_all('a', class_='a-link-normal a-color-tertiary')
     if a_tags:
         clses = []
-        parent_cate = None
+        # parent_cate = None
         for a in a_tags[:1]:
             text = a.text.replace('\n', '').strip()
             cates = None
             try:
                 cates = Item_Category.objects.get(name=text)
+                return cates
             except Item_Category.DoesNotExist:
-                print('do nothing')
+                ic = Item_Category(name=text)
+                serialize_ic = ItemCategorySerializer(ic)
+                if serialize_ic.is_valid():
+                    ic.save()
+                    return   ic
             except Item_Category.MultipleObjectsReturned:
                 cates = Item_Category.objects.filter(name=text)[0]
-            if not cates:
-                new_cate = Item_Category(name=text,parent_category=parent_cate)
-                new_cate.save()
-                parent_cate =  new_cate
-            else:
-                parent_cate = cates
-                continue
+                return cates
+
+            # if not cates:
+            #     new_cate = Item_Category(name=text,parent_category=parent_cate)
+            #     new_cate.save()
+            #     parent_cate =  new_cate
+            # else:
+            #     parent_cate = cates
+            #     continue
         # return clses;
-        return parent_cate
     return None
 
 # def get_size(soup):
@@ -264,6 +270,16 @@ def download_image(image_url):
         img_temp.close()
         return  image_instance
 
+def set_image_fk(img_id, item_id):
+    img_instance = Image.objects.get(id=img_id)
+    img_instance.item_id = item_id
+    img_instance.save()
+    return img_instance
+
+def create_img_with_fk(img, item_id):
+    i = Image(local_image=img, item_id=item_id)
+    return HttpResponse(i.id)
+
 def getUrl(code):
     return 'https://amazon.ca/dp/' + code + "/"
 
@@ -279,7 +295,7 @@ def scrap(url, code):
     # try:
         if not code:
             code =getCodeByUrl(url)
-        test = True
+        test = False
         response = None
         if test:
             f = open('inventory/test', 'r', encoding='utf-8')
@@ -302,7 +318,7 @@ def scrap(url, code):
                 urls = get_image_urls(url)
                 for u in urls:
                     img_instance = download_image(u)
-                    pics.append(urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url))
+                    pics.append({'id': img_instance.id, 'url': urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url), 'has_saved': True})
             cls =get_clses(soup)
             customize_color = get_color(soup)
             price = get_price(soup)
@@ -320,14 +336,16 @@ def scrap(url, code):
                     'fnksu_code': fnksu_code,
                     'lpn_code': lpn_code,
                     'pics':pics,
-                    'category': {'id': cls.id, 'name': cls.name} if cls else None,
+                    'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                     'customize_color': customize_color,
                     'msrp_price': price,
                     'bid_start_price': bid_start_price,
                 },
             }
         else:
-            return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " false."}
+            return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " failed."}
     # except Exception as e:
     #     print(e)
     #     return {'status': 2, 'message': 'Url found but some error happended in processing the data.'}
+
+
