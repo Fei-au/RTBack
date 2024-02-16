@@ -9,7 +9,7 @@ from .services  import scrap, download_image, getUrl
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer
+from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer, ImageSerializer, ItemFmDtDictSerializesr
 from staff.serializers import ProfileSerializer
 from django.views.decorators.http import require_POST
 from rest_framework.parsers import JSONParser
@@ -19,13 +19,8 @@ from staff.models import Profile
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser
-
-
-
-
-
-
-
+import json
+from urllib.parse import urljoin
 
 
 # Create your views here.
@@ -54,7 +49,6 @@ def getItemInfoByCode(request, code):
         else:
             serialize_item = ItemSerializer(items[0])
             # return Response({'status': "success", 'data': serialize_item.data})
-
             d = serialize_item.data
             print('*****',d)
             d_cate = Item_Category.objects.get(id=int(d['category_id']))
@@ -62,6 +56,16 @@ def getItemInfoByCode(request, code):
                 'id': str(d_cate.id),
                 'name': d_cate.name,
             }
+            d['price'] = d['msrp_price']
+            pics_with_item = Image.objects.filter(item_id = d['id'])
+            print('pics_with_item', pics_with_item)
+            pics = []
+            for p in pics_with_item:
+                pics.append({'id': p.id,
+                             'url': urljoin('http://192.168.2.79:8000/', 'inventory' + p.local_image.url),
+                             'has_saved': True})
+
+            d['pics'] = pics
             return Response({'status': "success", 'data': d})
 def scrapInfoByBOCode(request, code):
         url = getUrl(code)
@@ -77,8 +81,10 @@ def scrapInfoByBOCode(request, code):
             return  HttpResponseServerError("Server Error, please contact developer.")
 
 
-def scrapInfoByURL(request, url):
+def scrapInfoByURL(request):
     try:
+        url = request.GET.get('url', '')
+        print('url', url)
         result = scrap(url)
         print('result', result)
         if result['status'] == 1:
@@ -92,46 +98,140 @@ def scrapInfoByURL(request, url):
     except:
         return HttpResponseServerError('scrapInfoByURL failed, error happen in server')
 
-@csrf_exempt
-@parser_classes([FileUploadParser])
-def addNewItem(request):
-    # Get staff last issued item number
-    try:
-        print('here')
-        print('here', request)
-        print('here', request.data)
-        if 'item' in request.FILES:
-            itm = request.FILES['item']
-            stf = Profile.objects.get(user_id=itm['add_staff_id'])
-            # Set staff last issued number + 1 to new added item number
-            data = itm.copy()
-            if stf.last_issued_number + 1 <= stf.item_end:
-                data['item_number'] = stf.last_issued_number + 1
-            else:
-                raise  ValidationError(detail="Item number has reach the staff's limit, please contact admin")
-            # Serialize data and save it
-            serializer_itm = ItemSerializer(data=data)
-            serializer_stf = ProfileSerializer(stf, data={'last_issued_number': stf.last_issued_number + 1},partial=True)
-            if serializer_itm.is_valid() and serializer_stf.is_valid():
-                serializer_itm.save()
-                serializer_stf.save()
-                # Add images to the
-                if 'pics' in request.FILES:
-                    pics = request.FILES['pics']
-                    for pic in pics:
-                        if pic['has_saved']:
-                            set_image_fk(pic['id'], serializer_itm.id)
-                        else:
-                            create_img_with_fk({'uri': pic['url'], 'type': pic['type']})
+class IndexView(generic.ListView):
+        template_name = "inventory/index.html"
+        context_object_name = "latest_item_list"
+        def get_queryset(self):
+            # Get the fisrt 100 items in recent added item list.
+            lastest_item_list = Item.objects.order_by("-add_date")[:100]
+            # context = {
+            #     "lastest_item_list": lastest_item_list,
+            # }
+            # 2 return the template render
+            # template = loader.get_template("inventory/index.html")
+            # return  HttpResponse(template.render(context, request))
+
+            # 1 return requst url
+            # output = ", ".join([i.item_title for i in lastest_item_list])
+            # return  HttpResponse(output)
+
+            # 3 return template directly wtih context
+            # return  render(request, "inventory/index.html", context)
+
+            # 4 using in build views and redefine it as class and func in it
+            return lastest_item_list;
+
+
+class StatusView(APIView):
+    model = Item_Status
+    template_name = "inventory/status.html"
+    def get(self, request, format=None):
+        items = Item_Status.objects.all().values('status', 'id');
+        serialize_sts = ItemStatusSerializer(items, many=True)
+        return Response(serialize_sts.data);
+
+
+class CategoryView(APIView):
+    model = Item_Category
+    template_name = "inventory/status.html"
+    def get(self, request, format=None):
+        items = Item_Category.objects.all().values('name', 'id');
+        serialize_cates = ItemCategorySerializer(items, many=True)
+        return Response(serialize_cates.data)
+
+
+
+class AddNewItemView(APIView):
+    def post(self, request, *args, **kwargs):
+        # Get staff last issued item number
+        try:
+            # data = request.POST
+            # dataset_form = DatasetForm(request.POST, request.FILES)
+            # print('here', request.FILES.get('image').file)
+
+            item_string = request.data.get('item')
+            itm = json.loads(item_string)
+            # print('here', request.FILES.get('image').uri)
+            if itm:
+                stf = Profile.objects.get(user_id=itm['add_staff_id'])
+                # Set staff last issued number + 1 to new added item number
+                data = itm.copy()
+                # data['category_id'] = int(data['category_id'])
+                # print('c id******',data['category_id'])
+                # print('c id******',type(data['category_id']))
+                if stf.last_issued_number + 1 <= stf.item_end:
+                    data['item_number'] = stf.last_issued_number + 1
+                else:
+                    raise  ValidationError(detail="Item number has reach the staff's limit, please contact admin")
+                # Serialize data and save it
+                serializer_itm = ItemSerializer(data=data)
+                serializer_stf = ProfileSerializer(stf, data={'last_issued_number': stf.last_issued_number + 1},partial=True)
+                if serializer_itm.is_valid() and serializer_stf.is_valid():
+                    itm_instance = serializer_itm.save()
+                    print('*********',itm_instance.category_id)
+                    stf_instance = serializer_stf.save()
+                    # Add or update images to the item
+                    ids = request.data.getlist('img_id')
+                    if ids:
+                        for id in ids:
+                            id = int(id)
+                        print('ids', ids)
+                        for id in ids:
+                            saved_img = Image.objects.get(id=id)
+                            saved_img.item_id = itm_instance.id
+                            print('saved_img', saved_img)
+                            saved_img.save()
+                    imgs = request.FILES.getlist('image')
+                    if imgs:
+                        for img in imgs:
+                            new_img = Image(local_image=img, item_id=itm_instance)
+                            new_img.save()
                     return Response(serializer_itm.data, status=201)
-                raise ValidationError('Item has been saved, but image missed.')
-            else:
-                print('err1', serializer_itm.errors)
-                print('err2', serializer_stf.errors)
-                raise  ValidationError()
-    except Exception as err:
-        print('err', err)
-        raise APIException()
+                else:
+                    print('err1', serializer_itm.errors)
+                    print('err2', serializer_stf.errors)
+                    raise  ValidationError()
+        except Exception as err:
+            print('err', err)
+            raise APIException()
+
+class ImageUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.getlist('img')
+        for idx, f in enumerate(uploaded_file):
+            print('idx',idx)
+            img = Image(local_image=f)
+            img.save()
+        print('uploaded_file', uploaded_file)
+        print('uploaded_file', uploaded_file[0].__dict__)
+        # serializer = ImageSerializer(data=request.data)
+        # serializer = ImageSerializer(img)
+        # serializer.save()
+        return Response('hello', status=200)
+
+        if serializer.is_valid():
+            print('serializer', serializer)
+            serializer.save()
+            return Response('hello', status=200)
+        else:
+            print(serializer.errors)
+        return Response('hi', status=500)
+
+
+def addImage(request):
+    item_instance = Item(id=553)
+    image_instance = Image(item=item_instance)
+    image_instance.external_url = 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg'
+    download_image(image_instance, 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg')
+    return HttpResponse(image_instance.id)
+
+@csrf_exempt
+def deleteImage(request, pk):
+    image_instance = Image.objects.get(pk=pk)
+    image_instance.delete()
+    return HttpResponse('success')
+
+
 
 
 def deleteItem(request):
@@ -156,117 +256,3 @@ def getItem(request, id):
     except:
         print('do nothing')
     return HttpResponse('getItem success')
-
-# class GetStatusView(generic.ListView):
-#     # template_name = "inventory/index.html"
-# # context_object_name = "latest_item_list"
-#     list = Item_Status.objects.all();
-#     return JsonResponse({'status': "success", 'data': model_to_dict(items[0])})
-#
-#     def get_queryset(self):
-#         return  []
-# class GetCategoriesView(generic.ListView):
-#     # template_name = "inventory/index.html"
-# # context_object_name = "latest_item_list"
-#     def get_queryset(self):
-#         return  []
-# class GetSizesByCategoryView(generic.ListView):
-#     # model = Article
-#     # template_name = 'articles/article_list.html'
-#     def get_queryset(self):
-#         queryset = super().get_queryset()  # Get the original queryset
-#         category = self.request.GET.get('category')  # Get the 'category' query parameter
-#
-#         return  []
-#
-# class GetColorsByCategoryView(generic.ListView):
-#     # model = Article
-#     # template_name = 'articles/article_list.html'
-#     def get_queryset(self):
-#         queryset = super().get_queryset()  # Get the original queryset
-#         category = self.request.GET.get('category')  # Get the 'category' query parameter
-#         return  []
-
-
-class IndexView(generic.ListView):
-        template_name = "inventory/index.html"
-        context_object_name = "latest_item_list"
-        def get_queryset(self):
-            # Get the fisrt 100 items in recent added item list.
-
-            lastest_item_list = Item.objects.order_by("-add_date")[:100]
-
-            # context = {
-            #     "lastest_item_list": lastest_item_list,
-            # }
-            # 2 return the template render
-            # template = loader.get_template("inventory/index.html")
-            # return  HttpResponse(template.render(context, request))
-
-            # 1 return requst url
-            # output = ", ".join([i.item_title for i in lastest_item_list])
-            # return  HttpResponse(output)
-
-            # 3 return template directly wtih context
-            # return  render(request, "inventory/index.html", context)
-
-            # 4 using in build views and redefine it as class and func in it
-            return lastest_item_list;
-# class TitleView(generic.DetailView):
-#     model = Item
-#     template_name = "inventory/title.html"
-#     # return HttpResponse("You're looking at title %s." % item_id)
-
-
-# def set_description(request, item_id):
-#     try:
-#         # The request is a POST request, get the post request field named description
-#         des = request.POST['description']
-#         i = get_object_or_404(Item, pk=item_id)
-#         i.description = des
-#         i.save();
-#     except Item.DoesNotExist:
-#         raise Http404("Item does not exist")
-#     return HttpResponseRedirect(reverse("inventory:success"))
-
-class StatusView(APIView):
-    model = Item_Status
-    template_name = "inventory/status.html"
-    def get(self, request, format=None):
-        items = Item_Status.objects.all().values('status', 'id');
-        serialize_sts = ItemStatusSerializer(items, many=True)
-        return Response(serialize_sts.data);
-
-
-class CategoryView(APIView):
-    model = Item_Category
-    template_name = "inventory/status.html"
-    def get(self, request, format=None):
-        items = Item_Category.objects.all().values('name', 'id');
-        serialize_cates = ItemCategorySerializer(items, many=True)
-        return Response(serialize_cates.data)
-
-
-
-    # def get(self, request, *args, **kwargs):
-    #     list = Item_Category.objects.all();
-    #     print(list[0])
-    #     # print('here')
-    #     # data = serializers.serialize('json', list)
-    #     return HttpResponse();
-
-        # return JsonResponse(data, safe=false);
-
-
-def addImage(request):
-    item_instance = Item(id=553)
-    image_instance = Image(item=item_instance)
-    image_instance.external_url = 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg'
-    download_image(image_instance, 'https://media.wired.com/photos/5b8999943667562d3024c321/master/w_960,c_limit/trash2-01.jpg')
-    return HttpResponse(image_instance.id)
-
-@csrf_exempt
-def deleteImage(request, pk):
-    image_instance = Image.objects.get(pk=pk)
-    image_instance.delete()
-    return HttpResponse('success')

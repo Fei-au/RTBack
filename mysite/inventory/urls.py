@@ -13,13 +13,13 @@ urlpatterns = [
         path("scrap_info_by_bo_code/<str:code>", views.scrapInfoByBOCode, name="scrap_info_by_bo_code"),
 
         # 3. Have item amz url on hand
-        path("scrap_info_by_url/<str:url>", views.scrapInfoByURL  , name="scrap_info_by_url"),
+        path("scrap_info_by_url", views.scrapInfoByURL  , name="scrap_info_by_url"),
 
         # Dowmload images by urls
         # path("download_images_by_urls", views.DownloadImagesByUrlsView.    as_view(), name="download_images_by_urls"),
 
         # CRUD item
-        path("add_new_item", views.addNewItem, name="add_new_item"), # Post
+        path("add_new_item", views.AddNewItemView.as_view(), name="add_new_item"), # Post
         path("delete_item/<int:pk>", views.deleteItem, name="delete_item"), # Delete
         path("update_item/<int:pk>", views.updateItem, name="update_item"),# Put
         path("get_item/<int:pk>", views.getItem, name="get_item"),# Get
@@ -33,6 +33,7 @@ urlpatterns = [
 
         path("status", views.StatusView.as_view(), name="status"),
         path("category", views.CategoryView.as_view(), name="category"),
+        path("image_upload", views.ImageUploadView.as_view(), name="image_upload"),
         path("test_download_image", views.addImage, name="test_download_image"),
         path("delete_image/<int:pk>", views.deleteImage, name="delete_image"),
         # Simple requests

@@ -267,6 +267,7 @@ def download_image(image_url):
         # Save the image to the model's ImageField
         image_instance.local_image.save(img_file.name, img_file, save=True)
         image_instance.save()
+        print('new downloaded image_instance', image_instance.id)
         img_temp.close()
         return  image_instance
 
@@ -293,57 +294,71 @@ def getCodeByUrl(url):
 
 def scrap(url, code):
     # try:
-        if not code:
-            code =getCodeByUrl(url)
-        test = False
-        response = None
-        if test:
-            f = open('inventory/test', 'r', encoding='utf-8')
-            response = TestResponse(200, f.read())
-        else:
-            response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            title = get_title(soup)
-            description = get_description(soup)
-            if not description:
-                description = title
-            b_code = code
-            upc_code = None
-            ean_code = None
-            fnksu_code = None
-            lpn_code = None
-            pics = []
-            if not test:
-                urls = get_image_urls(url)
-                for u in urls:
-                    img_instance = download_image(u)
-                    pics.append({'id': img_instance.id, 'url': urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url), 'has_saved': True})
-            cls =get_clses(soup)
-            customize_color = get_color(soup)
-            price = get_price(soup)
-            bid_start_price = None
-            if price:
-                bid_start_price = get_bid_start_price(price);
-            return {
-                'status':1,
-                'data': {
-                    'title': title,
-                    'description': description,
-                    'b_code':b_code,
-                    'upc_code': upc_code,
-                    'ean_code': ean_code,
-                    'fnksu_code': fnksu_code,
-                    'lpn_code': lpn_code,
-                    'pics':pics,
-                    'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
-                    'customize_color': customize_color,
-                    'msrp_price': price,
-                    'bid_start_price': bid_start_price,
-                },
-            }
-        else:
-            return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " failed."}
+    print('here')
+
+    if not code:
+        code =getCodeByUrl(url)
+    test = False
+    response = None
+    if test:
+        f = open('inventory/test', 'r', encoding='utf-8')
+        response = TestResponse(200, f.read())
+    else:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "origin": "https://www.amazon.ca",
+            "Referer": "https://www.amazon.ca/dp/B0CLNSHRMP/ref=sspa_dk_detail_3?psc=1&pd_rd_i=B0CLNSHRMP&pd_rd_w=TppfT&content-id=amzn1.sym.feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_p=feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_r=57NXXZ8723HJBANB1899&pd_rd_wg=xBLcW&pd_rd_r=f88e047f-542a-49e7-b732-46113de6ea57&s=shoes&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM",
+            "Connection": "keep-alive",
+        }
+        print('url2', url)
+        response = requests.get(url)
+        print()
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        title = get_title(soup)
+        description = get_description(soup)
+        if not description:
+            description = title
+        b_code = code
+        upc_code = None
+        ean_code = None
+        fnksu_code = None
+        lpn_code = None
+        pics = []
+        if not test:
+            urls = get_image_urls(url)
+            for u in urls:
+                img_instance = download_image(u)
+                pics.append({'id': img_instance.id, 'url': urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url), 'has_saved': True})
+        cls =get_clses(soup)
+        customize_color = get_color(soup)
+        price = get_price(soup)
+        bid_start_price = None
+        if price:
+            bid_start_price = get_bid_start_price(price);
+        return {
+            'status':1,
+            'data': {
+                'title': title,
+                'description': description,
+                'b_code':b_code,
+                'upc_code': upc_code,
+                'ean_code': ean_code,
+                'fnksu_code': fnksu_code,
+                'lpn_code': lpn_code,
+                'pics':pics,
+                'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
+                'customize_color': customize_color,
+                'msrp_price': price,
+                'bid_start_price': bid_start_price,
+            },
+        }
+    else:
+        print('response.status_code', response.status_code)
+        return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " failed."}
     # except Exception as e:
     #     print(e)
     #     return {'status': 2, 'message': 'Url found but some error happended in processing the data.'}
