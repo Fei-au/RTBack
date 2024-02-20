@@ -14,6 +14,7 @@ from django.core.files.temp import NamedTemporaryFile
 from utils.file import get_extension_from_url
 from django.conf import settings
 from urllib.parse import urljoin
+from .serializers import ItemCategorySerializer
 import re
 
 
@@ -148,20 +149,15 @@ def get_description(soup):
 def get_clses(soup):
     a_tags = soup.find_all('a', class_='a-link-normal a-color-tertiary')
     if a_tags:
-        clses = []
-        # parent_cate = None
         for a in a_tags[:1]:
             text = a.text.replace('\n', '').strip()
-            cates = None
             try:
                 cates = Item_Category.objects.get(name=text)
                 return cates
             except Item_Category.DoesNotExist:
                 ic = Item_Category(name=text)
-                serialize_ic = ItemCategorySerializer(ic)
-                if serialize_ic.is_valid():
-                    ic.save()
-                    return   ic
+                ic.save()
+                return   ic
             except Item_Category.MultipleObjectsReturned:
                 cates = Item_Category.objects.filter(name=text)[0]
                 return cates

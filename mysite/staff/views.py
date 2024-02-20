@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
@@ -7,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import UserSerializer, ProfileSerializer
 from .models import Profile
+from django.contrib.auth import login, authenticate
+
 # Create your views here.
 @csrf_exempt
 @api_view(['POST'])
@@ -41,3 +41,16 @@ def creatStaff(request, user, data):
     serializer_user = UserSerializer(user)
     serializer_staff = ProfileSerializer(staff)
     return Response({'user': serializer_user.data, 'staff': serializer_staff.data}, status=201)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def loginUser(request):
+    json_data = request.data
+    user = authenticate(request, username=json_data.get('username'), password=json_data.get('password'))
+    if user is not None:
+        # login(request, user)
+        return Response({'status': 'success', 'id': user.id}, status=200)
+    else:
+        print('here')
+        return Response('login failed.', status=403)
