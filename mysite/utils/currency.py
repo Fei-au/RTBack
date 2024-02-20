@@ -10,6 +10,7 @@ def string_to_float_decimal(s):
             fv = float(s)
         print('fv', fv)
         result = frm.format(price=fv)
+        print('result', result)
         return float(result)
     # except:
     #     print('string_to_float_decimal error')

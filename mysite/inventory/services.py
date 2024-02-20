@@ -18,10 +18,9 @@ from .serializers import ItemCategorySerializer
 import re
 
 
-
 def get_image_urls(url):
     # Set the path to the Edge WebDriver executable
-    edge_driver_path = "C:/Users/wangk/PycharmProjects/ExtractImage/msedgedriver.exe"
+    # edge_driver_path = "C:/Users/wangk/PycharmProjects/ExtractImage/msedgedriver.exe"
 
     # Set Edge WebDriver options
     edge_options = webdriver.EdgeOptions()
@@ -33,6 +32,10 @@ def get_image_urls(url):
 
     # Navigate to the webpage
     driver.get(url)
+
+    raw_html = driver.page_source
+
+
 
     if url[25:-1].isnumeric():
         image_element = driver.find_element(By.ID, 'landingImage')
@@ -66,7 +69,7 @@ def get_image_urls(url):
             for idx, iURL in enumerate(image_urls, start=1):
                 print(f"Image {idx}: {iURL}")
 
-            return image_urls
+            return image_urls, raw_html
 
         finally:
             # Close the browser when done
@@ -190,7 +193,11 @@ def get_price(soup):
     span = soup.find('span',class_='priceToPay')
     # span = soup.find('span',class_='a-price aok-align-center reinventPricePriceToPayMargin priceToPay')
     if span:
-        return string_to_float_decimal(s.text[1:])
+        s = span.find('span', class_='a-offscreen')
+        if s:
+            t = s.text[1:].strip()
+            if t:
+                return string_to_float_decimal(t)
     span = soup.find('span', class_='a-price-whole')
     if span:
         return string_to_float_decimal(span.text)
@@ -288,73 +295,81 @@ def getCodeByUrl(url):
     else:
         return None
 
-def scrap(url, code):
+def scrap(**kwargs):
+    print('here in scrap')
+    print('scrap', kwargs)
+    url = kwargs.get('url')
+    print('pass url')
+    code = kwargs.get('code')
+    print('pass code')
     # try:
     print('here')
 
     if not code:
         code =getCodeByUrl(url)
     test = False
-    response = None
+    text = None
     if test:
         f = open('inventory/test', 'r', encoding='utf-8')
-        response = TestResponse(200, f.read())
+        text = f.read()
     else:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "origin": "https://www.amazon.ca",
-            "Referer": "https://www.amazon.ca/dp/B0CLNSHRMP/ref=sspa_dk_detail_3?psc=1&pd_rd_i=B0CLNSHRMP&pd_rd_w=TppfT&content-id=amzn1.sym.feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_p=feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_r=57NXXZ8723HJBANB1899&pd_rd_wg=xBLcW&pd_rd_r=f88e047f-542a-49e7-b732-46113de6ea57&s=shoes&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM",
-            "Connection": "keep-alive",
-        }
-        print('url2', url)
-        response = requests.get(url)
-        print()
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        title = get_title(soup)
-        description = get_description(soup)
-        if not description:
-            description = title
+        # headers = {
+        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        #     "Accept-Language": "en-US,en;q=0.9",
+        #     "Accept-Encoding": "gzip, deflate, br",
+        #     "origin": "https://www.amazon.ca",
+        #     "Referer": "https://www.amazon.ca/dp/B0CLNSHRMP/ref=sspa_dk_detail_3?psc=1&pd_rd_i=B0CLNSHRMP&pd_rd_w=TppfT&content-id=amzn1.sym.feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_p=feb8168a-837d-4479-a008-abb92f74a28b&pf_rd_r=57NXXZ8723HJBANB1899&pd_rd_wg=xBLcW&pd_rd_r=f88e047f-542a-49e7-b732-46113de6ea57&s=shoes&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM",
+        #     "Connection": "keep-alive",
+        # }
+        # print('url2', url)
+        # response = requests.get(url)
+        # print()
+        print('url is', url)
+        urls, text = get_image_urls(url)
         b_code = code
         upc_code = None
         ean_code = None
         fnksu_code = None
         lpn_code = None
         pics = []
-        if not test:
-            urls = get_image_urls(url)
-            for u in urls:
-                img_instance = download_image(u)
-                pics.append({'id': img_instance.id, 'url': urljoin('http://192.168.2.79:8000/',  'inventory'+img_instance.local_image.url), 'has_saved': True})
-        cls =get_clses(soup)
+        for u in urls:
+            img_instance = download_image(u)
+            pics.append({'id': img_instance.id,
+                         'url': urljoin('http://192.168.2.79:8000/', 'inventory' + img_instance.local_image.url),
+                         'has_saved': True})
+        soup = BeautifulSoup(text, 'html.parser')
+        title = get_title(soup)
+        description = get_description(soup)
+        if not description:
+            description = title
+        cls = get_clses(soup)
         customize_color = get_color(soup)
         price = get_price(soup)
+        print('price', price)
         bid_start_price = None
         if price:
             bid_start_price = get_bid_start_price(price);
         return {
-            'status':1,
+            'status': 1,
             'data': {
                 'title': title,
                 'description': description,
-                'b_code':b_code,
+                'b_code': b_code,
                 'upc_code': upc_code,
                 'ean_code': ean_code,
                 'fnksu_code': fnksu_code,
                 'lpn_code': lpn_code,
-                'pics':pics,
+                'pics': pics,
                 'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                 'customize_color': customize_color,
                 'msrp_price': price,
                 'bid_start_price': bid_start_price,
             },
         }
-    else:
-        print('response.status_code', response.status_code)
-        return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " failed."}
+    # else:
+    #     print('response.status_code', response.status_code)
+    #     return {'status': 0, 'message': "Access to address " + 'https://amazon.ca/dp/' + code + "/" + " failed."}
     # except Exception as e:
     #     print(e)
     #     return {'status': 2, 'message': 'Url found but some error happended in processing the data.'}

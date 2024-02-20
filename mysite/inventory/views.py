@@ -21,6 +21,9 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser
 import json
 from urllib.parse import urljoin
+import os
+from django.core.files.storage import default_storage
+from utils.file import image_upload_to, get_extension
 
 
 # Create your views here.
@@ -57,10 +60,12 @@ def getItemInfoByCode(request, code):
                 'name': d_cate.name,
             }
             d['price'] = d['msrp_price']
+            print('d, id', d['id'])
+            print('d, id type', type(d['id']))
             pics_with_item = Image.objects.filter(item_id = d['id'])
             print('pics_with_item', pics_with_item)
             pics = []
-            for p in pics_with_item:
+            for p in pics_with_item[:3]:
                 pics.append({'id': p.id,
                              'url': urljoin('http://192.168.2.79:8000/', 'inventory' + p.local_image.url),
                              'has_saved': True})
@@ -69,7 +74,7 @@ def getItemInfoByCode(request, code):
             return Response({'status': "success", 'data': d})
 def scrapInfoByBOCode(request, code):
         url = getUrl(code)
-        result = scrap(url, code)
+        result = scrap(url=url, code=code)
         print('result', result)
         if result['status'] == 1:
             return JsonResponse({'status': 'success', 'data': result['data']})
@@ -85,7 +90,7 @@ def scrapInfoByURL(request):
     try:
         url = request.GET.get('url', '')
         print('url', url)
-        result = scrap(url)
+        result = scrap(url=url)
         print('result', result)
         if result['status'] == 1:
             return JsonResponse({'status': 'success', 'data': result['data']})
@@ -172,19 +177,41 @@ class AddNewItemView(APIView):
                     stf_instance = serializer_stf.save()
                     # Add or update images to the item
                     ids = request.data.getlist('img_id')
+                    i = 1
                     if ids:
                         for id in ids:
                             id = int(id)
-                        print('ids', ids)
                         for id in ids:
                             saved_img = Image.objects.get(id=id)
-                            saved_img.item_id = itm_instance.id
-                            print('saved_img', saved_img)
-                            saved_img.save()
+                            # scrapped image and haven't set foreign key to any item
+                            if not saved_img.item_id:
+                                print('here not')
+
+                                old_file = saved_img.local_image.path
+                                exts = get_extension(saved_img.local_image.name)
+                                new_file_relative = str(itm_instance.id) + '_' + str(i) + exts
+                                new_file = os.path.join(os.path.dirname(old_file), new_file_relative)
+                                new_name = image_upload_to(new_file_relative)
+                                if not default_storage.exists(new_file):
+                                    os.rename(old_file, new_file)
+                                    saved_img.local_image.name = new_name
+                                    i = i+1
+                                saved_img.item_id = itm_instance.id
+                                saved_img.save()
+                            else:
+                                print('here')
+                                new_img = saved_img
+                                # copy the new instance
+                                new_img.pk = None
+                                new_img.item_id = itm_instance.id
+                                new_img.save()
                     imgs = request.FILES.getlist('image')
                     if imgs:
                         for img in imgs:
-                            new_img = Image(local_image=img, item_id=itm_instance)
+                            exts = get_extension(img.name)
+                            new_img = Image(local_image=img, item_id=itm_instance.id)
+                            new_img.local_image.name = str(itm_instance.id) + '_' + str(i)+exts
+                            i = i + 1
                             new_img.save()
                     return Response(serializer_itm.data, status=201)
                 else:
