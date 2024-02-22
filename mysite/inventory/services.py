@@ -32,8 +32,9 @@ def get_image_urls(url):
 
     # Navigate to the webpage
     driver.get(url)
-
+    # driver.implicitly_wait(10)
     raw_html = driver.page_source
+    current_url = driver.current_url
 
 
 
@@ -69,7 +70,7 @@ def get_image_urls(url):
             for idx, iURL in enumerate(image_urls, start=1):
                 print(f"Image {idx}: {iURL}")
 
-            return image_urls, raw_html
+            return image_urls, raw_html, current_url
 
         finally:
             # Close the browser when done
@@ -288,7 +289,7 @@ def getUrl(code):
     return 'https://amazon.ca/dp/' + code + "/"
 
 def getCodeByUrl(url):
-    match = re.search(r"dp\/([^\/]+)", url)
+    match = re.search(r"dp\/([A-Za-z0-9]+)", url)
     if match:
         result = match.group(1)
         return result
@@ -326,12 +327,16 @@ def scrap(**kwargs):
         # response = requests.get(url)
         # print()
         print('url is', url)
-        urls, text = get_image_urls(url)
+        urls, text, c_r = get_image_urls(url)
+        if not code:
+            code = getCodeByUrl(c_r)
         b_code = code
-        upc_code = None
-        ean_code = None
-        fnksu_code = None
-        lpn_code = None
+        upc_ean_code = None
+        # remove following codes
+        # upc_code = None
+        # ean_code = None
+        # fnksu_code = None
+        # lpn_code = None
         pics = []
         for u in urls:
             img_instance = download_image(u)
@@ -340,9 +345,11 @@ def scrap(**kwargs):
                          'has_saved': True})
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)
-        description = get_description(soup)
-        if not description:
-            description = title
+        description = title
+        # set description same as title
+        # description = get_description(soup)
+        # if not description:
+        #     description = title
         cls = get_clses(soup)
         customize_color = get_color(soup)
         price = get_price(soup)
@@ -356,10 +363,11 @@ def scrap(**kwargs):
                 'title': title,
                 'description': description,
                 'b_code': b_code,
-                'upc_code': upc_code,
-                'ean_code': ean_code,
-                'fnksu_code': fnksu_code,
-                'lpn_code': lpn_code,
+                'upc_ean_code': upc_ean_code,
+                # 'upc_code': upc_code,
+                # 'ean_code': ean_code,
+                # 'fnksu_code': fnksu_code,
+                # 'lpn_code': lpn_code,
                 'pics': pics,
                 'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                 'customize_color': customize_color,

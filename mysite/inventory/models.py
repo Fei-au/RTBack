@@ -63,10 +63,11 @@ class Item(models.Model):
     title = models.TextField(blank=True)
     description = models.TextField(blank=True)
     b_code = models.CharField(max_length=45, blank=True, null=True)
-    upc_code = models.CharField(max_length=45, blank=True, null=True)
-    ean_code = models.CharField(max_length=45, blank=True, null=True)
-    fnsku_code = models.CharField(max_length=45, blank=True, null=True)
-    lpn_code = models.CharField(max_length=45, blank=True, null=True)
+    upc_ean_code = models.CharField(max_length=45, blank=True, null=True)
+    # upc_code = models.CharField(max_length=45, blank=True, null=True)
+    # ean_code = models.CharField(max_length=45, blank=True, null=True)
+    # fnsku_code = models.CharField(max_length=45, blank=True, null=True)
+    # lpn_code = models.CharField(max_length=45, blank=True, null=True)
     msrp_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
     bid_start_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
     category = models.ForeignKey(Item_Category, on_delete=models.SET_NULL, blank=True, null=True)
@@ -81,8 +82,10 @@ class Item(models.Model):
     add_staff = models.ForeignKey('staff.Profile', on_delete=models.DO_NOTHING, blank=True, null=True) # Staff who add the item
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
     stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK,blank=True,null=True)
-    shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...
-    layer = models.CharField(max_length=1, blank=True,null=True) # Shelf layer of item location, eg: A, B, C...
+    location = models.CharField(max_length=10, blank=True,null=True)
+        # use one field location instead of two fields
+    # shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...
+    # layer = models.CharField(max_length=1, blank=True,null=True) # Shelf layer of item location, eg: A, B, C...
     def __str__(self):
         return self.title + ': ' + self.description
 

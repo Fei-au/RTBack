@@ -35,12 +35,12 @@ def getItemInfoByCode(request, code):
         items = None
         if code.startswith('B'):
             items = Item.objects.filter(b_code=code)
-        elif code.startswith('X'):
-            items = Item.objects.filter(fnsku_code=code)
-        elif code.startswith('LPN'):
-            items = Item.objects.filter(lpn_code=code)
+        # elif code.startswith('X'):
+        #     items = Item.objects.filter(fnsku_code=code)
+        # elif code.startswith('LPN'):
+        #     items = Item.objects.filter(lpn_code=code)
         elif code.isdigit:
-            items = Item.objects.filter(Q(upc_code=code) | Q(ean_code=code))
+            items = Item.objects.filter(upc_ean_code=code)
         else:
             print('here')
             return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not stored in database.'})
@@ -158,16 +158,21 @@ class AddNewItemView(APIView):
             itm = json.loads(item_string)
             # print('here', request.FILES.get('image').uri)
             if itm:
-                stf = Profile.objects.get(user_id=itm['add_staff_id'])
+                print('here1')
+                stf = Profile.objects.get(user_id=itm['add_staff'])
+                print('here2', type(itm['add_staff']))
+
+
                 # Set staff last issued number + 1 to new added item number
                 data = itm.copy()
                 # data['category_id'] = int(data['category_id'])
                 # print('c id******',data['category_id'])
                 # print('c id******',type(data['category_id']))
-                if stf.last_issued_number + 1 <= stf.item_end:
-                    data['item_number'] = stf.last_issued_number + 1
-                else:
-                    raise  ValidationError(detail="Item number has reach the staff's limit, please contact admin")
+                if not itm.get('item_number'):
+                    if stf.last_issued_number + 1 <= stf.item_end:
+                        data['item_number'] = stf.last_issued_number + 1
+                    else:
+                        raise  ValidationError(detail="Item number has reach the staff's limit, please contact admin")
                 # Serialize data and save it
                 serializer_itm = ItemSerializer(data=data)
                 serializer_stf = ProfileSerializer(stf, data={'last_issued_number': stf.last_issued_number + 1},partial=True)
