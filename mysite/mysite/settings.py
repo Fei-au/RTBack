@@ -96,7 +96,7 @@ DATABASES = {
         "NAME": "ruito",
         "USER": "root",
         "PASSWORD": "root",
-        "HOST": "127.0.0.1",
+        "HOST": "34.136.17.151",
         "PORT": "3306",
     }
 }

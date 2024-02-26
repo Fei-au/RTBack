@@ -15,7 +15,9 @@ urlpatterns = [
         # 3. Have item amz url on hand
         path("scrap_info_by_url", views.scrapInfoByURL  , name="scrap_info_by_url"),
 
-        # Dowmload images by urls
+                      path("scrap_info_by_num_code/<str:code>", views.scrapInfoByNumCode, name="scrap_info_by_num_code"),
+
+                      # Dowmload images by urls
         # path("download_images_by_urls", views.DownloadImagesByUrlsView.    as_view(), name="download_images_by_urls"),
 
         # CRUD item
@@ -24,7 +26,8 @@ urlpatterns = [
         path("update_item/<int:pk>", views.updateItem, name="update_item"),# Put
         path("get_item/<int:pk>", views.getItem, name="get_item"),# Get
 
-        # session, save case number
+
+                      # session, save case number
         # Item list content
         # path("get_status",views.GetStatusView.as_view(),name="get_status"),
         # path("get_categories", views.GetCategoriesView.as_view(), name="get_categories"),

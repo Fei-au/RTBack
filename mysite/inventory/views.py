@@ -5,7 +5,7 @@ from .models import Item, Item_Status,Item_Category, Image
 from django.urls import reverse
 from django.views import generic
 from django.core import serializers
-from .services  import scrap, download_image, getUrl
+from .services  import scrap, download_image, getUrl, scrapInfoByNumCodeService
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
@@ -84,6 +84,21 @@ def scrapInfoByBOCode(request, code):
             return  HttpResponseServerError(result['message'])
         else:
             return  HttpResponseServerError("Server Error, please contact developer.")
+
+
+def scrapInfoByNumCode(request, code):
+    # url = getUrl(code)
+    # result = scrap(url=url, code=code)
+    # print('result', result)
+    result = scrapInfoByNumCodeService(code);
+    if result['status'] == 1:
+        return JsonResponse({'status': 'success', 'data': result['data']})
+    elif result['status'] == 0:
+        return JsonResponse({'status': 'not found', 'message': result['message']})
+    elif result['status'] == 2:
+        return HttpResponseServerError(result['message'])
+    else:
+        return HttpResponseServerError("Server Error, please contact developer.")
 
 
 def scrapInfoByURL(request):

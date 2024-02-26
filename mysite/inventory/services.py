@@ -7,6 +7,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from .models import Item_Category, Item, Image
 from utils.currency import string_to_float_decimal
 from django.core.files.base import ContentFile
@@ -16,6 +17,7 @@ from django.conf import settings
 from urllib.parse import urljoin
 from .serializers import ItemCategorySerializer
 import re
+import time
 
 
 def get_image_urls(url):
@@ -76,40 +78,150 @@ def get_image_urls(url):
             # Close the browser when done
             driver.quit()
 
-# def download_images(image_urls, lot):
-#     # Folder where you want to save the images
-#     save_folder = PHOTO_FOLDER
-#     auction_num = AUCTION_NUM
-#     prefix = ''
-#
-#     digits = int(math.log10(int(lot))) + 1
-#     if digits == 1:
-#         prefix = '000'
-#     elif digits == 2:
-#         prefix = '00'
-#     elif digits == 3:
-#         prefix = '0'
-#
-#     # change_and_print_number(f"{auction_num}{prefix}{lot}")
-#
-#     # Check if the folder exists, if not, create it
-#     if not os.path.exists(save_folder):
-#         os.makedirs(save_folder)
-#
-#     # Loop through the image URLs and download the images
-#     for i, image_url in enumerate(image_urls):
-#         response = requests.get(image_url, stream=True)
-#         if response.status_code == 200:
-#             # Get the file extension from the URL
-#             file_extension = image_url.split(".")[-1]
-#             # Save the image to the specified folder
-#             image_name = os.path.join(save_folder, f"{auction_num}{prefix}{lot}_{str(i+1)}.{file_extension}")
-#             with open(image_name, 'wb') as f:
-#                 for chunk in response.iter_content(chunk_size=8192):
-#                     f.write(chunk)
-#             print("Image {} downloaded and saved as {}".format(i + 1, image_name))
-#
-#     return True
+def getRawHtmlByNumCode(driver, code, amz_url):
+
+    driver.get(amz_url)
+
+    # input number code and start search
+    input_element = driver.find_element(By.ID, 'twotabsearchtextbox')
+    input_element.clear()
+    input_element.send_keys(code)
+
+    submit_button = driver.find_element(By.ID, 'nav-search-submit-button')
+    submit_button.click()
+
+    # wait until find the first result
+    try:
+        wait = WebDriverWait(driver, 4)
+        result_title_div = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@data-cel-widget="search_result_0"]')))
+        title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
+        if title.text != 'Results':
+            raise TimeoutException('Not find the product')
+        first_result = driver.find_element(By.XPATH, '//*[@data-cel-widget="search_result_1"]')
+        # click the first result to go to the product page
+        first_img_link = first_result.find_element(By.TAG_NAME, value='a')
+        first_img_link.click()
+        wait2 = WebDriverWait(driver, 4)
+        product_page = wait2.until(EC.presence_of_element_located((By.ID, 'productTitle')))
+
+    except (TimeoutException, NoSuchElementException) as e:
+        print('here in the exception')
+        if amz_url.find('.ca') != -1:
+            return getRawHtmlByNumCode(driver, code, 'https://www.amazon.com/')
+        else:
+            return 'Code not found in both amazon.ca and amazon.com'
+    except:
+        return 'Error happend'
+
+    # get first three imgs
+    image_urls = []
+    raw_html = None
+    current_url = None
+    try:
+        # Find the thumbnail elements with class name "a-spacing-small item imageThumbnail a-declarative"
+        thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
+                                                  'li.a-spacing-small.item.imageThumbnail.a-declarative')
+
+        # Interact with each thumbnail element and click the nested <span> with class name
+        # "a-button a-button-thumbnail a-button-toggle"
+        for i, thumbnail in enumerate(thumbnail_elements[:3], start=1):
+            span_element = thumbnail.find_element(By.CSS_SELECTOR, 'span.a-button.a-button-thumbnail.a-button-toggle')
+            ActionChains(driver).move_to_element(span_element).click().perform()
+
+        # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
+        wait = WebDriverWait(driver, 4)
+        li_elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
+
+
+        # Loop through the <li> elements and extract the image URLs
+        for i, li_element in enumerate(li_elements[:3], start=1):
+            image_element = li_element.find_element(By.TAG_NAME, 'img')
+            image_url = image_element.get_attribute('src')
+            image_urls.append(image_url)
+
+        # Output the image URLs
+        for idx, iURL in enumerate(image_urls, start=1):
+            print(f"Image {idx}: {iURL}")
+
+    finally:
+        # get raw source
+        raw_html = driver.page_source
+        current_url = driver.current_url
+        # Close the browser when done
+        driver.quit()
+
+    return image_urls, raw_html, current_url
+def scrpByHtml(urls, text, c_r):
+    b_code = getCodeByUrl(c_r)
+    upc_ean_code = None
+    # remove following codes
+    # upc_code = None
+    # ean_code = None
+    # fnksu_code = None
+    # lpn_code = None
+    pics = []
+    for u in urls:
+        img_instance = download_image(u)
+        pics.append({'id': img_instance.id,
+                     'url': urljoin('http://192.168.2.79:8000/', 'inventory' + img_instance.local_image.url),
+                     'has_saved': True})
+    soup = BeautifulSoup(text, 'html.parser')
+    title = get_title(soup)
+    description = title
+    # set description same as title
+    # description = get_description(soup)
+    # if not description:
+    #     description = title
+    cls = get_clses(soup)
+    customize_color = get_color(soup)
+    price = get_price(soup)
+    print('price', price)
+    bid_start_price = None
+    if price:
+        bid_start_price = get_bid_start_price(price);
+    return {
+        'status': 1,
+        'data': {
+            'title': title,
+            'description': description,
+            'b_code': b_code,
+            'upc_ean_code': upc_ean_code,
+            # 'upc_code': upc_code,
+            # 'ean_code': ean_code,
+            # 'fnksu_code': fnksu_code,
+            # 'lpn_code': lpn_code,
+            'pics': pics,
+            'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
+            'customize_color': customize_color,
+            'msrp_price': price,
+            'bid_start_price': bid_start_price,
+        },
+    }
+def scrapInfoByNumCodeService(code):
+    start_time = time.time()
+    # Set Edge WebDriver options
+    edge_options = webdriver.EdgeOptions()
+    edge_options.binary_location = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+    # Replace with your actual path to Edge binary
+    # edge_options.headless = True
+    # Initialize Edge WebDriver with options
+    driver = webdriver.Edge(options=edge_options)
+    # get imgs and raw html
+    res = getRawHtmlByNumCode(driver, code, 'https://www.amazon.ca/')
+    if isinstance(res, tuple):
+        img_urls, raw_html, current_url = res
+        mid_time = time.time()
+        print(f"****************Scrp time in web took {mid_time - start_time:.2f} seconds.")
+        # gather product info
+        result = scrpByHtml(img_urls, raw_html, current_url)
+        end_time = time.time()
+        print(
+            f"****************Gather all info including download imgs processing took {end_time - mid_time:.2f} seconds.")
+        return result;
+    else:
+        # not find the product
+        msg = res
+        return {'status': 0, 'message':msg }
 
 
 def get_title(soup):
@@ -133,9 +245,6 @@ def get_title(soup):
             if span_with_class:
                 return span_with_class.text.replace('\n', '').strip()
     return None
-
-
-
 
 def get_description(soup):
     div = soup.find('div', id='productDescription')
@@ -198,10 +307,8 @@ def get_price(soup):
         if s:
             t = s.text[1:].strip()
             if t:
+                print('priceToPay is', t)
                 return string_to_float_decimal(t)
-    span = soup.find('span', class_='a-price-whole')
-    if span:
-        return string_to_float_decimal(span.text)
     spans = soup.find_all('span', class_='apexPriceToPay')
     # For price pattern like $18.30 - $20.55, return highest price
     if spans:
@@ -209,12 +316,17 @@ def get_price(soup):
             span = spans[-1]
             s = span.find('span', class_='a-offscreen')
             if s:
+                print('apexPriceToPay is', s)
                 return string_to_float_decimal(s.text[1:])
         else:
             span = spans.find('span', class_='a-offscreen')
             if span:
-                return string_to_float_decimal(s.text[1:])
-
+                print('apexPriceToPay is', span)
+                return string_to_float_decimal(span.text[1:])
+    span = soup.find('span', class_='a-price-whole')
+    if span:
+        print('a-price-whole is', span)
+        return string_to_float_decimal(span.text)
     # span = soup.find('span', id='tp-tool-tip-subtotal-price-value')
     # print('span3', span3)
     # if span3:
@@ -295,6 +407,9 @@ def getCodeByUrl(url):
         return result
     else:
         return None
+
+
+
 
 def scrap(**kwargs):
     print('here in scrap')
