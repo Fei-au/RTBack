@@ -109,7 +109,7 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         if amz_url.find('.ca') != -1:
             return getRawHtmlByNumCode(driver, code, 'https://www.amazon.com/')
         else:
-            return 'Code not found in both amazon.ca and amazon.com'
+            return 'Code not found in amazon.ca and amazon.com'
     except:
         return 'Error happend'
 
