@@ -46,6 +46,14 @@ def get_image_urls(url):
     else:
 
         try:
+            # in case there is a verify code, click the change new code, it will go to the product page.
+            try:
+                diff_img_button = driver.find_element(By.XPATH, "//a[@onclick='window.location.reload()']")
+                diff_img_button.click()
+                wait = WebDriverWait(driver, 60)
+                wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li.a-spacing-small.item.imageThumbnail.a-declarative')))
+            except:
+                print('do nothing')
             # Find the thumbnail elements with class name "a-spacing-small item imageThumbnail a-declarative"
             thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
                                                     'li.a-spacing-small.item.imageThumbnail.a-declarative')
