@@ -36,7 +36,7 @@ def get_image_urls(url):
     options.add_argument('--disable-extensions')
 
     # Initialize chrome WebDriver with options
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome(service=service, options=options)
 
     # Navigate to the webpage
     driver.get(url)
