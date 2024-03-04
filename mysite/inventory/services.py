@@ -22,15 +22,18 @@ import time
 
 def get_image_urls(url):
     # Set the path to the Edge WebDriver executable
-    # edge_driver_path = "C:/Users/wangk/PycharmProjects/ExtractImage/msedgedriver.exe"
+    # webdriver_path  = "C:/Users/wangk/PycharmProjects/ExtractImage/msedgedriver.exe"
 
     # Set Edge WebDriver options
-    edge_options = webdriver.EdgeOptions()
-    edge_options.binary_location = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
-    # Replace with your actual path to Edge binary
-    # edge_options.headless = True
+    options = webdriver.ChromeOptions()
+    options.binary_location = "/usr/local/bin/chromedriver"
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    options.add_argument('start-maximized')  # Start maximized
+    options.add_argument('disable-infobars')
+    options.add_argument('--disable-extensions')
     # Initialize Edge WebDriver with options
-    driver = webdriver.Edge(options=edge_options)
+    driver = webdriver.Chrome(options=options)
 
     # Navigate to the webpage
     driver.get(url)
