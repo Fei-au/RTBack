@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 app_name="inventory"
 urlpatterns = [
         # path("", views.IndexView.as_view(), name="index"),
-        # path("<int:pk>/", views.IndexView.as_view(), name="title"),
         # 1. Have item information in database
         path("get_item_info_by_code/<str:code>", views.getItemInfoByCode, name="get_item_info_by_code"),
 

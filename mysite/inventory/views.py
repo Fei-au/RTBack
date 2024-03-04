@@ -119,28 +119,8 @@ def scrapInfoByURL(request):
     except:
         return HttpResponseServerError('scrapInfoByURL failed, error happen in server')
 
-class IndexView(generic.ListView):
-        template_name = "inventory/index.html"
-        context_object_name = "latest_item_list"
-        def get_queryset(self):
-            # Get the fisrt 100 items in recent added item list.
-            lastest_item_list = Item.objects.order_by("-add_date")[:100]
-            # context = {
-            #     "lastest_item_list": lastest_item_list,
-            # }
-            # 2 return the template render
-            # template = loader.get_template("inventory/index.html")
-            # return  HttpResponse(template.render(context, request))
+# class IndexView(generic.ListView):
 
-            # 1 return requst url
-            # output = ", ".join([i.item_title for i in lastest_item_list])
-            # return  HttpResponse(output)
-
-            # 3 return template directly wtih context
-            # return  render(request, "inventory/index.html", context)
-
-            # 4 using in build views and redefine it as class and func in it
-            return lastest_item_list;
 
 
 class StatusView(APIView):
@@ -152,8 +132,8 @@ class StatusView(APIView):
 
 
 class CategoryView(APIView):
-    model = Item_Category
-    template_name = "inventory/status.html"
+    renderer_classes = [JSONRenderer]
+
     def get(self, request, format=None):
         items = Item_Category.objects.all().values('name', 'id');
         serialize_cates = ItemCategorySerializer(items, many=True)
@@ -162,6 +142,8 @@ class CategoryView(APIView):
 
 
 class AddNewItemView(APIView):
+    renderer_classes = [JSONRenderer]
+
     def post(self, request, *args, **kwargs):
         # Get staff last issued item number
         try:
@@ -243,6 +225,8 @@ class AddNewItemView(APIView):
             raise APIException()
 
 class ImageUploadView(APIView):
+    renderer_classes = [JSONRenderer]
+
     def post(self, request, *args, **kwargs):
         uploaded_file = request.FILES.getlist('img')
         for idx, f in enumerate(uploaded_file):
