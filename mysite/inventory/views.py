@@ -143,8 +143,6 @@ class IndexView(generic.ListView):
 
 
 class StatusView(APIView):
-    # model = Item_Status
-    # template_name = "inventory/status.html"
     def get(self, request, format=None):
         items = Item_Status.objects.all().values('status', 'id');
         serialize_sts = ItemStatusSerializer(items, many=True)
