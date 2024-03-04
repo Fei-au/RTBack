@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -28,13 +29,11 @@ def get_image_urls(url):
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
 
-    # options = webdriver.ChromeOptions()
-    # options.binary_location = "/usr/local/bin/chromedriver"
-    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    # options.add_argument('start-maximized')  # Start maximized
-    # options.add_argument('disable-infobars')
-    # options.add_argument('--disable-extensions')
+    options = Options()
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    options.add_argument('disable-infobars')
+    options.add_argument('--disable-extensions')
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service)
