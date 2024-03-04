@@ -213,13 +213,21 @@ def scrpByHtml(urls, text, c_r):
     }
 def scrapInfoByNumCodeService(code):
     start_time = time.time()
-    # Set Edge WebDriver options
-    edge_options = webdriver.EdgeOptions()
-    edge_options.binary_location = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
-    # Replace with your actual path to Edge binary
-    # edge_options.headless = True
-    # Initialize Edge WebDriver with options
-    driver = webdriver.Edge(options=edge_options)
+
+    webdriver_path = "/usr/local/bin/chromedriver"
+
+    # Set chrome WebDriver options
+    service = Service(executable_path=webdriver_path)
+
+    options = Options()
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    options.add_argument('disable-infobars')
+    options.add_argument('--disable-extensions')
+
+    # Initialize chrome WebDriver with options
+    driver = webdriver.Chrome(service=service, options=options)
+
     # get imgs and raw html
     res = getRawHtmlByNumCode(driver, code, 'https://www.amazon.ca/')
     if isinstance(res, tuple):
