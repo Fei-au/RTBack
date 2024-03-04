@@ -24,6 +24,7 @@ from urllib.parse import urljoin
 import os
 from django.core.files.storage import default_storage
 from utils.file import image_upload_to, get_extension
+from rest_framework.renderers import JSONRenderer
 
 
 # Create your views here.
@@ -143,6 +144,7 @@ class IndexView(generic.ListView):
 
 
 class StatusView(APIView):
+    renderer_classes = [JSONRenderer]
     def get(self, request, format=None):
         items = Item_Status.objects.all().values('status', 'id');
         serialize_sts = ItemStatusSerializer(items, many=True)
