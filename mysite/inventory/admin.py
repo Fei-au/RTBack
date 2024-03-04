@@ -15,3 +15,4 @@ admin.site.register(Item_Status)
 admin.site.register(Item_Category)
 admin.site.register(Supplier)
 
+ 
