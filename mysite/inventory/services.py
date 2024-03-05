@@ -96,6 +96,7 @@ def get_image_urls(url):
 def bypass_verify_code(driver, selector, value):
     try:
         # if there is a verify code when opening amazon, click another image to bypass it.
+        print('reload.......')
         diff_img_button = driver.find_element(By.XPATH, "//a[@onclick='window.location.reload()']")
         diff_img_button.click()
     except:
