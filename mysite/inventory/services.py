@@ -26,14 +26,19 @@ def get_image_urls(url):
     # Set the path to the Edge WebDriver executable
     webdriver_path  = "/usr/local/bin/chromedriver"
 
+    # local setting
+    webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
+
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
-
     options = Options()
-    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    options.add_argument('disable-infobars')
+    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    # options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
+
+    # local setting
+    options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
@@ -200,7 +205,7 @@ def scrpByHtml(urls, text, c_r):
     for u in urls:
         img_instance = download_image(u)
         pics.append({'id': img_instance.id,
-                     'url': urljoin('http://192.168.2.79:8000/', 'inventory' + img_instance.local_image.url),
+                     'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
                      'has_saved': True})
     soup = BeautifulSoup(text, 'html.parser')
     title = get_title(soup)
@@ -237,19 +242,21 @@ def scrpByHtml(urls, text, c_r):
 def scrapInfoByNumCodeService(code):
     start_time = time.time()
 
-    webdriver_path  = "/usr/local/bin/chromedriver"
+    # webdriver_path  = "/usr/local/bin/chromedriver"
+
+    # local setting
+    webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
 
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
     options = Options()
-    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    options.add_argument('disable-infobars')
+    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    # options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
 
     # local setting
-    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
-    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
+    options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
@@ -504,7 +511,7 @@ def scrap(**kwargs):
         for u in urls:
             img_instance = download_image(u)
             pics.append({'id': img_instance.id,
-                         'url': urljoin('http://192.168.2.79:8000/', 'inventory' + img_instance.local_image.url),
+                         'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
                          'has_saved': True})
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)

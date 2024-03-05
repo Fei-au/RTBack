@@ -42,12 +42,18 @@ def getItemInfoByCode(request, code):
         #     items = Item.objects.filter(lpn_code=code)
         elif code.isdigit:
             items = Item.objects.filter(upc_ean_code=code)
+        elif code.startswith('LPN'):
+            items = Item.objects.filter(lpn_code=code)
         else:
             print('here')
-            return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not stored in database.'})
+            return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
         if len(items) == 0:
             if code.startswith('B'):
                 return scrapInfoByBOCode(request, code)
+            elif code.isdigit:
+                return scrapInfoByNumCode(request, code=code)
+            elif code.startswith('LPN'):
+                return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database, please find scan the digital code of this product.'})
             print('here2')
             return JsonResponse({'status': 'not found', 'message': 'Code '+code+' not found in database.'})
         else:
@@ -68,7 +74,7 @@ def getItemInfoByCode(request, code):
             pics = []
             for p in pics_with_item[:3]:
                 pics.append({'id': p.id,
-                             'url': urljoin('http://192.168.2.79:8000/', 'inventory' + p.local_image.url),
+                             'url': urljoin('http://35.209.176.71/', 'inventory' + p.local_image.url),
                              'has_saved': True})
 
             d['pics'] = pics
