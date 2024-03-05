@@ -92,10 +92,21 @@ def get_image_urls(url):
             # Close the browser when done
             driver.quit()
 
+# bypass verify code and wait to find target element
+def bypass_verify_code(driver, selector, value):
+    try:
+        # if there is a verify code when opening amazon, click another image to bypass it.
+        diff_img_button = driver.find_element(By.XPATH, "//a[@onclick='window.location.reload()']")
+        diff_img_button.click()
+    except:
+        # no verify code, just keep going
+        print('do nothing for element', value)
+    finally:
+        wait = WebDriverWait(driver, 15)
+        wait.until(EC.presence_of_all_elements_located((selector, value)))
 def getRawHtmlByNumCode(driver, code, amz_url):
-
     driver.get(amz_url)
-
+    bypass_verify_code(driver, By.ID, 'twotabsearchtextbox')
     # input number code and start search
     try:
         input_element = driver.find_element(By.ID, 'twotabsearchtextbox')
@@ -107,33 +118,42 @@ def getRawHtmlByNumCode(driver, code, amz_url):
     except NoSuchElementException as e:
         return 'Could not found the search bar in amz.'
 
-    # wait until find the first result
-    try:
-        wait = WebDriverWait(driver, 4)
-        result_title_div = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@data-cel-widget="search_result_0"]')))
-        title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
-        if title.text != 'Results':
-            raise TimeoutException('Not find the product')
-        first_result = driver.find_element(By.XPATH, '//*[@data-cel-widget="search_result_1"]')
-        # click the first result to go to the product page
-        first_img_link = first_result.find_element(By.TAG_NAME, value='a')
-        first_img_link.click()
-        wait2 = WebDriverWait(driver, 4)
-        product_page = wait2.until(EC.presence_of_element_located((By.ID, 'productTitle')))
+    # wait until find results
+    bypass_verify_code(driver, By.XPATH, '//*[@data-cel-widget="search_result_0"]')
 
-    except (TimeoutException, NoSuchElementException) as e:
-        print('here in the exception')
-        if amz_url.find('.ca') != -1:
-            return getRawHtmlByNumCode(driver, code, 'https://www.amazon.com/')
-        else:
-            return 'Code not found in amazon.ca and amazon.com'
-    except:
-        return 'Error happend'
+    i = 0
+    # loop for first 4 result to find the result title and the next result image
+    while i <= 3:
+        try:
+            txt = '//*[@data-cel-widget="search_result_{}"]'
+            result_title_div = driver.find_element(By.XPATH, txt.format(i))
+            title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
+            if title.text != 'Results':
+                raise TimeoutException('Not find the product')
+            first_result = driver.find_element(By.XPATH, txt.format(i+1))
+            # click the first result to go to the product page
+            first_img_link = first_result.find_element(By.TAG_NAME, value='a')
+            first_img_link.click()
+            break
+        except (TimeoutException, NoSuchElementException) as e:
+            # print('here in exception with i ', i)
+            if i != 3:
+                i = i+1
+                continue
+            # print('here error timeout or no such element')
+            if amz_url.find('.ca') != -1:
+                return getRawHtmlByNumCode(driver, code, 'https://www.amazon.com/')
+            else:
+                return 'Code not found in amazon.ca and amazon.com'
+        except:
+            # print('other error happend')
+            return 'Error happend'
+
+    bypass_verify_code(driver, By.ID,  'productTitle')
 
     # get first three imgs
     image_urls = []
-    raw_html = None
-    current_url = None
+
     try:
         # Find the thumbnail elements with class name "a-spacing-small item imageThumbnail a-declarative"
         thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
@@ -166,8 +186,7 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         current_url = driver.current_url
         # Close the browser when done
         driver.quit()
-
-    return image_urls, raw_html, current_url
+        return image_urls, raw_html, current_url
 def scrpByHtml(urls, text, c_r):
     b_code = getCodeByUrl(c_r)
     upc_ean_code = None
@@ -217,16 +236,19 @@ def scrpByHtml(urls, text, c_r):
 def scrapInfoByNumCodeService(code):
     start_time = time.time()
 
-    webdriver_path = "/usr/local/bin/chromedriver"
+    webdriver_path  = "/usr/local/bin/chromedriver"
 
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
-
     options = Options()
     options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
+
+    # local setting
+    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
+    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
