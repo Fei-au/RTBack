@@ -97,12 +97,15 @@ def getRawHtmlByNumCode(driver, code, amz_url):
     driver.get(amz_url)
 
     # input number code and start search
-    input_element = driver.find_element(By.ID, 'twotabsearchtextbox')
-    input_element.clear()
-    input_element.send_keys(code)
+    try:
+        input_element = driver.find_element(By.ID, 'twotabsearchtextbox')
+        input_element.clear()
+        input_element.send_keys(code)
 
-    submit_button = driver.find_element(By.ID, 'nav-search-submit-button')
-    submit_button.click()
+        submit_button = driver.find_element(By.ID, 'nav-search-submit-button')
+        submit_button.click()
+    except NoSuchElementException as e:
+        return 'Could not found the search bar in amz.'
 
     # wait until find the first result
     try:
