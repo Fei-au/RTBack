@@ -27,7 +27,7 @@ def get_image_urls(url):
     webdriver_path  = "/usr/local/bin/chromedriver"
 
     # local setting
-    webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
+    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
 
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
@@ -38,7 +38,7 @@ def get_image_urls(url):
     options.add_argument('--disable-extensions')
 
     # local setting
-    options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
+    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
@@ -242,10 +242,10 @@ def scrpByHtml(urls, text, c_r):
 def scrapInfoByNumCodeService(code):
     start_time = time.time()
 
-    # webdriver_path  = "/usr/local/bin/chromedriver"
+    webdriver_path  = "/usr/local/bin/chromedriver"
 
     # local setting
-    webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
+    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
 
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
@@ -256,7 +256,7 @@ def scrapInfoByNumCodeService(code):
     options.add_argument('--disable-extensions')
 
     # local setting
-    options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
+    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
