@@ -283,10 +283,10 @@ def get_title(soup):
     span = soup.find('span', id='productTitle')
     if span:
         return span.text.replace('\n', '').strip()
-    meta = soup.find('meta', name='title')
+    meta = soup.find('meta', attrs={'name': 'title'})
     if meta:
         return meta['content']
-    meta2 = soup.find('meta', name='description')
+    meta2 = soup.find('meta', attrs={'name': 'description'})
     if meta2:
         return meta2['content']
     title = soup.find('title')
