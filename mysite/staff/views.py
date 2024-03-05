@@ -49,10 +49,13 @@ def loginUser(request):
     json_data = request.data
     user = authenticate(request, username=json_data.get('username'), password=json_data.get('password'))
     if user is not None:
+        staff = None
         if user.is_staff:
             staff = Profile.objects.get(user_id=user.id)
         # login(request, user)
-        return Response({'status': 'success', 'user_id': user.id, 'staff_id': staff.id}, status=200)
+            return Response({'status': 'success', 'user_id': user.id, 'staff_id': staff.id}, status=200)
+        else:
+            return Response({'status': 'success', 'user_id': user.id}, status=200)
     else:
         print('here')
         return Response('login failed.', status=403)
