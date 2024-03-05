@@ -193,9 +193,9 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         # Close the browser when done
         driver.quit()
         return image_urls, raw_html, current_url
-def scrpByHtml(urls, text, c_r):
+def scrpByHtml(urls, text, c_r, upc_ean_code):
     b_code = getCodeByUrl(c_r)
-    upc_ean_code = None
+    upc_ean_code = upc_ean_code
     # remove following codes
     # upc_code = None
     # ean_code = None
@@ -268,7 +268,7 @@ def scrapInfoByNumCodeService(code):
         mid_time = time.time()
         print(f"****************Scrp time in web took {mid_time - start_time:.2f} seconds.")
         # gather product info
-        result = scrpByHtml(img_urls, raw_html, current_url)
+        result = scrpByHtml(img_urls, raw_html, current_url, upc_ean_code=code)
         end_time = time.time()
         print(
             f"****************Gather all info including download imgs processing took {end_time - mid_time:.2f} seconds.")
