@@ -32,9 +32,9 @@ def get_image_urls(url):
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
     options = Options()
-    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    # options.add_argument('disable-infobars')
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
 
     # local setting
@@ -250,9 +250,9 @@ def scrapInfoByNumCodeService(code):
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
     options = Options()
-    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    # options.add_argument('disable-infobars')
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+    options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
 
     # local setting
