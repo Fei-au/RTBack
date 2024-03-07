@@ -136,9 +136,9 @@ def get_image_urls(url):
 def bypass_verify_code(driver, selector, value):
     try:
         # if there is a verify code when opening amazon, click another image to bypass it.
-        print('reload.......')
         diff_img_button = driver.find_element(By.XPATH, "//a[@onclick='window.location.reload()']")
         diff_img_button.click()
+        print('reload.......')
     except:
         # no verify code, just keep going
         print('do nothing for element', value)
@@ -147,6 +147,7 @@ def bypass_verify_code(driver, selector, value):
         wait = WebDriverWait(driver, 15)
         wait.until(EC.presence_of_all_elements_located((selector, value)))
     except TimeoutException:
+        print('here not found element {value}')
         raise TimeoutException('element {value} not found')
     # finally:
     #     wait = WebDriverWait(driver, 15)
