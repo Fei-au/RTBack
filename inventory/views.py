@@ -27,7 +27,10 @@ import os
 from django.core.files.storage import default_storage
 from utils.file import image_upload_to, get_extension
 from rest_framework.renderers import JSONRenderer
+import logging
 
+
+logger = logging.getLogger('django')
 
 # Create your views here.
 # Input code
@@ -138,6 +141,10 @@ class StatusView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request, format=None):
+        IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
+        WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
+        logger.debug(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+        logger.debug(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
         items = Item_Status.objects.all().values('status', 'id');
         serialize_sts = ItemStatusSerializer(items, many=True)
         return Response(serialize_sts.data);

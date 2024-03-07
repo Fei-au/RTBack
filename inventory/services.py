@@ -36,8 +36,9 @@ print('WEBDRIVER_PATH', WEBDRIVER_PATH)
 def create_driver():
     # Set the path to the Edge WebDriver executable
 
-    logger.debug('********************This is a debug message IS_DEVELOPMENT', IS_DEVELOPMENT)
-    logger.debug('********************This is a debug message WEBDRIVER_PATH', WEBDRIVER_PATH)
+    logger.debug(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+    logger.debug(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+
 
     options = Options()
     if IS_DEVELOPMENT:
