@@ -103,7 +103,7 @@ def get_image_urls(url):
             print('click each next image')
 
             # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
-            wait = WebDriverWait(driver, 4)
+            wait = WebDriverWait(driver, 10)
             li_elements = wait.until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
             print('wait to get image')
