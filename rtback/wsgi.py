@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rtback.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
 django_env = os.getenv('DJANGO_ENV', 'development')
 env_file = f".env.{django_env}"
