@@ -38,53 +38,56 @@ logger = logging.getLogger('django')
 # Output not found if not find item
 @api_view(['GET'])
 def getItemInfoByCode(request, code):
-    items = None
-    if code.startswith('B'):
-        items = Item.objects.filter(b_code=code)
-    # elif code.startswith('X'):
-    #     items = Item.objects.filter(fnsku_code=code)
-    # elif code.startswith('LPN'):
-    #     items = Item.objects.filter(lpn_code=code)
-    elif code.isdigit:
-        items = Item.objects.filter(upc_ean_code=code)
-    elif code.startswith('LPN'):
-        items = Item.objects.filter(lpn_code=code)
-    else:
-        print('here')
-        return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
-    if len(items) == 0:
+    try:
+        items = None
         if code.startswith('B'):
-            return scrapInfoByBOCode(request, code)
+            items = Item.objects.filter(b_code=code)
+        # elif code.startswith('X'):
+        #     items = Item.objects.filter(fnsku_code=code)
+        # elif code.startswith('LPN'):
+        #     items = Item.objects.filter(lpn_code=code)
         elif code.isdigit:
-            return scrapInfoByNumCode(request, code=code)
+            items = Item.objects.filter(upc_ean_code=code)
         elif code.startswith('LPN'):
-            return JsonResponse({'status': 'not found',
-                                 'message': 'Code ' + code + ' not found in database, please find scan the digital code of this product.'})
-        print('here2')
-        return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
-    else:
-        serialize_item = ItemSerializer(items[0])
-        # return Response({'status': "success", 'data': serialize_item.data})
-        d = serialize_item.data
-        print('*****', d)
-        d_cate = Item_Category.objects.get(id=int(d['category_id']))
-        d['category'] = {
-            'id': str(d_cate.id),
-            'name': d_cate.name,
-        }
-        d['price'] = d['msrp_price']
-        print('d, id', d['id'])
-        print('d, id type', type(d['id']))
-        pics_with_item = Image.objects.filter(item_id=d['id'])
-        print('pics_with_item', pics_with_item)
-        pics = []
-        for p in pics_with_item[:3]:
-            pics.append({'id': p.id,
-                         'url': urljoin('http://35.209.176.71/', 'inventory' + p.local_image.url),
-                         'has_saved': True})
+            items = Item.objects.filter(lpn_code=code)
+        else:
+            print('here')
+            return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
+        if len(items) == 0:
+            if code.startswith('B'):
+                return scrapInfoByBOCode(request, code)
+            elif code.isdigit:
+                return scrapInfoByNumCode(request, code=code)
+            elif code.startswith('LPN'):
+                return JsonResponse({'status': 'not found',
+                                     'message': 'Code ' + code + ' not found in database, please find scan the digital code of this product.'})
+            print('here2')
+            return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
+        else:
+            serialize_item = ItemSerializer(items[0])
+            # return Response({'status': "success", 'data': serialize_item.data})
+            d = serialize_item.data
+            print('*****', d)
+            d_cate = Item_Category.objects.get(id=int(d['category_id']))
+            d['category'] = {
+                'id': str(d_cate.id),
+                'name': d_cate.name,
+            }
+            d['price'] = d['msrp_price']
+            print('d, id', d['id'])
+            print('d, id type', type(d['id']))
+            pics_with_item = Image.objects.filter(item_id=d['id'])
+            print('pics_with_item', pics_with_item)
+            pics = []
+            for p in pics_with_item[:3]:
+                pics.append({'id': p.id,
+                             'url': urljoin('http://35.209.176.71/', 'inventory' + p.local_image.url),
+                             'has_saved': True})
 
-        d['pics'] = pics
-        return Response({'status': "success", 'data': d})
+            d['pics'] = pics
+            return Response({'status': "success", 'data': d})
+    except Exception as e:
+        print(e)
 
 
 def scrapInfoByBOCode(request, code):
