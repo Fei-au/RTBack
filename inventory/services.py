@@ -96,7 +96,7 @@ def get_image_urls(url):
 
             # Interact with each thumbnail element and click the nested <span> with class name
             # "a-button a-button-thumbnail a-button-toggle"
-            for i, thumbnail in enumerate(thumbnail_elements[:3], start=1):
+            for i, thumbnail in enumerate(thumbnail_elements[:1], start=1):
                 span_element = thumbnail.find_element(By.CSS_SELECTOR,
                                                       'span.a-button.a-button-thumbnail.a-button-toggle')
                 ActionChains(driver).move_to_element(span_element).click().perform()
