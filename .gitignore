@@ -4,4 +4,3 @@ Scripts
 pyvenv.cfg
 .idea
 mysite/media
-**__pycache__/
