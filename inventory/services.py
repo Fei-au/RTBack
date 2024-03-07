@@ -177,15 +177,20 @@ def getRawHtmlByNumCode(driver, code, amz_url):
     # loop for first 4 result to find the result title and the next result image
     while i <= 3:
         try:
+            print('here we in the result page and get the 0 element')
             txt = '//*[@data-cel-widget="search_result_{}"]'
             result_title_div = driver.find_element(By.XPATH, txt.format(i))
             title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
+            print('get the title word')
             if title.text != 'Results':
+                print('titile word is not Results')
                 raise TimeoutException('Not find the product')
             first_result = driver.find_element(By.XPATH, txt.format(i + 1))
+            print('get the first result and start go in')
             # click the first result to go to the product page
             first_img_link = first_result.find_element(By.TAG_NAME, value='a')
             first_img_link.click()
+            print('after click the first image link')
             break
         except (TimeoutException, NoSuchElementException) as e:
             # print('here in exception with i ', i)
