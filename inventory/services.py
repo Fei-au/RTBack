@@ -145,6 +145,7 @@ def bypass_verify_code(driver, selector, value):
     finally:
         wait = WebDriverWait(driver, 15)
         wait.until(EC.presence_of_all_elements_located((selector, value)))
+        print('here find the element', value)
 
 
 def getRawHtmlByNumCode(driver, code, amz_url):
@@ -163,7 +164,6 @@ def getRawHtmlByNumCode(driver, code, amz_url):
 
     # wait until find results
     bypass_verify_code(driver, By.XPATH, '//*[@data-cel-widget="search_result_0"]')
-
     i = 0
     # loop for first 4 result to find the result title and the next result image
     while i <= 3:
