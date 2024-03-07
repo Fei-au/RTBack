@@ -50,6 +50,7 @@ def create_driver():
 
     options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+    options.add_argument('--disable-gpu')  # applicable to windows os only
     options.add_argument('start-maximized')  #
 
     webdriver_path = WEBDRIVER_PATH
