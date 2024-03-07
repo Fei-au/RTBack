@@ -2,7 +2,6 @@ import datetime
 from django.db import models
 from django.utils  import timezone
 import os
-import logging
 
 # Create your models here.
 
@@ -44,7 +43,7 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=15, blank=True, null=True)
     added_date = models.DateField(default=datetime.date.today)
     def __str__(self):
-        return self.name + ': ' + address
+        return self.name + ': ' + self.address
 
 class Item_Status(models.Model):
     status = models.CharField(max_length=40)

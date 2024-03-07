@@ -1,5 +1,4 @@
 import requests
-import math
 from bs4 import BeautifulSoup
 import os
 from selenium import webdriver
@@ -10,46 +9,53 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from .models import Item_Category, Item, Image
+from .models import Item_Category, Image
 from utils.currency import string_to_float_decimal
 from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
 from utils.file import get_extension_from_url
-from django.conf import settings
 from urllib.parse import urljoin
-from .serializers import ItemCategorySerializer
 import re
 import time
 
+from dotenv import load_dotenv
 
-def get_image_urls(url):
+load_dotenv()
+
+IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
+WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
+BINARY_LOCATION = os.getenv('BINARY_LOCATION')
+
+
+def create_driver():
     # Set the path to the Edge WebDriver executable
-    webdriver_path  = "/usr/local/bin/chromedriver"
+    options = Options()
+    if IS_DEVELOPMENT:
+        # local setting
+        options.binary_location = BINARY_LOCATION
+    else:
+        options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+        options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
 
-    # local setting
-    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
-
+    webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
-    options = Options()
-    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
 
-    # local setting
-    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
-
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
+    return driver
 
+
+def get_image_urls(url):
+    driver = create_driver()
     # Navigate to the webpage
     driver.get(url)
     # driver.implicitly_wait(10)
     raw_html = driver.page_source
     current_url = driver.current_url
-
-
 
     if url[25:-1].isnumeric():
         image_element = driver.find_element(By.ID, 'landingImage')
@@ -62,22 +68,25 @@ def get_image_urls(url):
                 diff_img_button = driver.find_element(By.XPATH, "//a[@onclick='window.location.reload()']")
                 diff_img_button.click()
                 wait = WebDriverWait(driver, 60)
-                wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li.a-spacing-small.item.imageThumbnail.a-declarative')))
+                wait.until(EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, 'li.a-spacing-small.item.imageThumbnail.a-declarative')))
             except:
                 print('do nothing')
             # Find the thumbnail elements with class name "a-spacing-small item imageThumbnail a-declarative"
             thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
-                                                    'li.a-spacing-small.item.imageThumbnail.a-declarative')
+                                                      'li.a-spacing-small.item.imageThumbnail.a-declarative')
 
             # Interact with each thumbnail element and click the nested <span> with class name
             # "a-button a-button-thumbnail a-button-toggle"
             for i, thumbnail in enumerate(thumbnail_elements[:3], start=1):
-                span_element = thumbnail.find_element(By.CSS_SELECTOR, 'span.a-button.a-button-thumbnail.a-button-toggle')
+                span_element = thumbnail.find_element(By.CSS_SELECTOR,
+                                                      'span.a-button.a-button-thumbnail.a-button-toggle')
                 ActionChains(driver).move_to_element(span_element).click().perform()
 
             # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
             wait = WebDriverWait(driver, 4)
-            li_elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
+            li_elements = wait.until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
 
             image_urls = []
 
@@ -97,6 +106,7 @@ def get_image_urls(url):
             # Close the browser when done
             driver.quit()
 
+
 # bypass verify code and wait to find target element
 def bypass_verify_code(driver, selector, value):
     try:
@@ -110,6 +120,8 @@ def bypass_verify_code(driver, selector, value):
     finally:
         wait = WebDriverWait(driver, 15)
         wait.until(EC.presence_of_all_elements_located((selector, value)))
+
+
 def getRawHtmlByNumCode(driver, code, amz_url):
     driver.get(amz_url)
     bypass_verify_code(driver, By.ID, 'twotabsearchtextbox')
@@ -136,7 +148,7 @@ def getRawHtmlByNumCode(driver, code, amz_url):
             title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
             if title.text != 'Results':
                 raise TimeoutException('Not find the product')
-            first_result = driver.find_element(By.XPATH, txt.format(i+1))
+            first_result = driver.find_element(By.XPATH, txt.format(i + 1))
             # click the first result to go to the product page
             first_img_link = first_result.find_element(By.TAG_NAME, value='a')
             first_img_link.click()
@@ -144,7 +156,7 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         except (TimeoutException, NoSuchElementException) as e:
             # print('here in exception with i ', i)
             if i != 3:
-                i = i+1
+                i = i + 1
                 continue
             # print('here error timeout or no such element')
             if amz_url.find('.ca') != -1:
@@ -155,7 +167,7 @@ def getRawHtmlByNumCode(driver, code, amz_url):
             # print('other error happend')
             return 'Error happend'
 
-    bypass_verify_code(driver, By.ID,  'productTitle')
+    bypass_verify_code(driver, By.ID, 'productTitle')
 
     # get first three imgs
     image_urls = []
@@ -175,7 +187,6 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         wait = WebDriverWait(driver, 4)
         li_elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
 
-
         # Loop through the <li> elements and extract the image URLs
         for i, li_element in enumerate(li_elements[:3], start=1):
             image_element = li_element.find_element(By.TAG_NAME, 'img')
@@ -193,6 +204,8 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         # Close the browser when done
         driver.quit()
         return image_urls, raw_html, current_url
+
+
 def scrpByHtml(urls, text, c_r, upc_ean_code):
     b_code = getCodeByUrl(c_r)
     upc_ean_code = upc_ean_code
@@ -220,7 +233,7 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
     print('price', price)
     bid_start_price = None
     if price:
-        bid_start_price = get_bid_start_price(price);
+        bid_start_price = get_bid_start_price(price)
     return {
         'status': 1,
         'data': {
@@ -239,27 +252,12 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
             'bid_start_price': bid_start_price,
         },
     }
+
+
 def scrapInfoByNumCodeService(code):
     start_time = time.time()
 
-    webdriver_path  = "/usr/local/bin/chromedriver"
-
-    # local setting
-    # webdriver_path = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
-
-    # Set chrome WebDriver options
-    service = Service(executable_path=webdriver_path)
-    options = Options()
-    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    options.add_argument('disable-infobars')
-    options.add_argument('--disable-extensions')
-
-    # local setting
-    # options.binary_location = r'D:\chrome-win64\chrome-win64\chrome.exe'
-
-    # Initialize chrome WebDriver with options
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = create_driver()
 
     # get imgs and raw html
     res = getRawHtmlByNumCode(driver, code, 'https://www.amazon.ca/')
@@ -272,11 +270,11 @@ def scrapInfoByNumCodeService(code):
         end_time = time.time()
         print(
             f"****************Gather all info including download imgs processing took {end_time - mid_time:.2f} seconds.")
-        return result;
+        return result
     else:
         # not find the product
         msg = res
-        return {'status': 0, 'message':msg }
+        return {'status': 0, 'message': msg}
 
 
 def get_title(soup):
@@ -301,6 +299,7 @@ def get_title(soup):
                 return span_with_class.text.replace('\n', '').strip()
     return None
 
+
 def get_description(soup):
     div = soup.find('div', id='productDescription')
     if div:
@@ -311,8 +310,9 @@ def get_description(soup):
                 text = ''
                 for s in spans:
                     text += s.text + ' '
-                return  text
+                return text
     return None
+
 
 def get_clses(soup):
     a_tags = soup.find_all('a', class_='a-link-normal a-color-tertiary')
@@ -325,7 +325,7 @@ def get_clses(soup):
             except Item_Category.DoesNotExist:
                 ic = Item_Category(name=text)
                 ic.save()
-                return   ic
+                return ic
             except Item_Category.MultipleObjectsReturned:
                 cates = Item_Category.objects.filter(name=text)[0]
                 return cates
@@ -340,6 +340,7 @@ def get_clses(soup):
         # return clses;
     return None
 
+
 # def get_size(soup):
 #     span_with_id = soup.find('span',id='native_dropdown_selected_size_name')
 #     if span_with_id:
@@ -351,11 +352,12 @@ def get_color(soup):
     if div_with_id:
         spans = div_with_id.find_all('span', class_='selection')
         if spans:
-            return  spans[0].text.replace('\n', '').strip()
+            return spans[0].text.replace('\n', '').strip()
     return None
 
+
 def get_price(soup):
-    span = soup.find('span',class_='priceToPay')
+    span = soup.find('span', class_='priceToPay')
     # span = soup.find('span',class_='a-price aok-align-center reinventPricePriceToPayMargin priceToPay')
     if span:
         s = span.find('span', class_='a-offscreen')
@@ -374,7 +376,7 @@ def get_price(soup):
                 print('apexPriceToPay is', s)
                 return string_to_float_decimal(s.text[1:])
         else:
-            span = spans.find('span', class_='a-offscreen')
+            span = spans[0].find('span', class_='a-offscreen')
             if span:
                 print('apexPriceToPay is', span)
                 return string_to_float_decimal(span.text[1:])
@@ -390,21 +392,22 @@ def get_price(soup):
     #     return string_to_float_decimal(s.text[1:])
     return None
 
+
 def get_bid_start_price(price):
     try:
         frt = "${:.2f}"
         if price < 6:
             return 1.00
-        elif price >=6 and price <=10:
+        elif price >= 6 and price <= 10:
             return 2.00
-        elif price>10 and price <=20:
+        elif price > 10 and price <= 20:
             return 3.00
-        elif price >20 and price <=50:
+        elif price > 20 and price <= 50:
             return 5.00
-        elif price >50 and price <=100:
+        elif price > 50 and price <= 100:
             return 10.00
         else:
-            v = int(price/100)*20
+            v = int(price / 100) * 20
             return string_to_float_decimal(v)
     except:
         return None
@@ -422,6 +425,7 @@ class TestResponse:
         self.status_code = status_code
         self.text = text
 
+
 def download_image(image_url):
     image_instance = Image()
     extension = get_extension_from_url(image_url)
@@ -434,13 +438,14 @@ def download_image(image_url):
         img_temp.flush()
         img_temp.seek(0)
         # Load the content into a Django File
-        img_file = ContentFile(img_temp.read(), name='temp_name'+extension)
+        img_file = ContentFile(img_temp.read(), name='temp_name' + extension)
         # Save the image to the model's ImageField
         image_instance.local_image.save(img_file.name, img_file, save=True)
         image_instance.save()
         print('new downloaded image_instance', image_instance.id)
         img_temp.close()
-        return  image_instance
+        return image_instance
+
 
 def set_image_fk(img_id, item_id):
     img_instance = Image.objects.get(id=img_id)
@@ -448,22 +453,22 @@ def set_image_fk(img_id, item_id):
     img_instance.save()
     return img_instance
 
-def create_img_with_fk(img, item_id):
-    i = Image(local_image=img, item_id=item_id)
-    return HttpResponse(i.id)
+
+# def create_img_with_fk(img, item_id):
+#     i = Image(local_image=img, item_id=item_id)
+#     return HttpResponse(i.id)
 
 def getUrl(code):
     return 'https://amazon.ca/dp/' + code + "/"
 
+
 def getCodeByUrl(url):
-    match = re.search(r"dp\/([A-Za-z0-9]+)", url)
+    match = re.search(r"dp/([A-Za-z0-9]+)", url)
     if match:
         result = match.group(1)
         return result
     else:
         return None
-
-
 
 
 def scrap(**kwargs):
@@ -477,7 +482,7 @@ def scrap(**kwargs):
     print('here')
 
     if not code:
-        code =getCodeByUrl(url)
+        code = getCodeByUrl(url)
     test = False
     text = None
     if test:
@@ -526,7 +531,7 @@ def scrap(**kwargs):
         print('price', price)
         bid_start_price = None
         if price:
-            bid_start_price = get_bid_start_price(price);
+            bid_start_price = get_bid_start_price(price)
         return {
             'status': 1,
             'data': {
@@ -551,5 +556,3 @@ def scrap(**kwargs):
     # except Exception as e:
     #     print(e)
     #     return {'status': 2, 'message': 'Url found but some error happended in processing the data.'}
-
-

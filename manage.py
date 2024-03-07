@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+from dotenv import load_dotenv
 
 def main():
     """Run administrative tasks."""
@@ -16,7 +16,11 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
-
+def set_env():
+    django_env = os.getenv('DJANGO_ENV', 'development')
+    env_file = f".env.{django_env}"
+    load_dotenv(dotenv_path=env_file)
 
 if __name__ == '__main__':
+    set_env()
     main()
