@@ -142,10 +142,16 @@ def bypass_verify_code(driver, selector, value):
     except:
         # no verify code, just keep going
         print('do nothing for element', value)
-    finally:
+
+    try:
         wait = WebDriverWait(driver, 15)
         wait.until(EC.presence_of_all_elements_located((selector, value)))
-        print('here find the element', value)
+    except TimeoutException:
+        raise TimeoutException('element {value} not found')
+    # finally:
+    #     wait = WebDriverWait(driver, 15)
+    #     wait.until(EC.presence_of_all_elements_located((selector, value)))
+    #     print('here find the element', value)
 
 
 def getRawHtmlByNumCode(driver, code, amz_url):
