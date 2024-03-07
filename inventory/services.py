@@ -169,7 +169,10 @@ def getRawHtmlByNumCode(driver, code, amz_url):
         return 'Could not found the search bar in amz.'
 
     # wait until find results
-    bypass_verify_code(driver, By.XPATH, '//*[@data-cel-widget="search_result_0"]')
+    try:
+        bypass_verify_code(driver, By.XPATH, '//*[@data-cel-widget="search_result_0"]')
+    except:
+        return 'Code not found in amazon.ca and amazon.com'
     i = 0
     # loop for first 4 result to find the result title and the next result image
     while i <= 3:
@@ -198,8 +201,10 @@ def getRawHtmlByNumCode(driver, code, amz_url):
             # print('other error happend')
             return 'Error happend'
 
-    bypass_verify_code(driver, By.ID, 'productTitle')
-
+    try:
+        bypass_verify_code(driver, By.ID, 'productTitle')
+    except:
+        return 'Code not found in amazon.ca and amazon.com'
     # get first three imgs
     image_urls = []
 
