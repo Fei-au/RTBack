@@ -143,8 +143,10 @@ class StatusView(APIView):
     def get(self, request, format=None):
         IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
         WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
-        logger.debug(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+        logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
         logger.debug(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+        with open('django.log', 'a') as log_file:
+            log_file.write(WEBDRIVER_PATH)
         items = Item_Status.objects.all().values('status', 'id');
         serialize_sts = ItemStatusSerializer(items, many=True)
         return Response(serialize_sts.data);
