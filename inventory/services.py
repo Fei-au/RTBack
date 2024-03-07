@@ -45,9 +45,9 @@ def create_driver():
         # local setting
         options.binary_location = BINARY_LOCATION
     else:
-        options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
         options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
 
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
