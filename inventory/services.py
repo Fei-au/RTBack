@@ -30,13 +30,15 @@ BINARY_LOCATION = os.getenv('BINARY_LOCATION')
 
 logger = logging.getLogger('django')
 
-logger.debug('********************This is a debug message IS_DEVELOPMENT', IS_DEVELOPMENT)
-logger.debug('********************This is a debug message WEBDRIVER_PATH', WEBDRIVER_PATH)
 
 print('IS_DEVELOPMENT', IS_DEVELOPMENT)
 print('WEBDRIVER_PATH', WEBDRIVER_PATH)
 def create_driver():
     # Set the path to the Edge WebDriver executable
+
+    logger.debug('********************This is a debug message IS_DEVELOPMENT', IS_DEVELOPMENT)
+    logger.debug('********************This is a debug message WEBDRIVER_PATH', WEBDRIVER_PATH)
+
     options = Options()
     if IS_DEVELOPMENT:
         # local setting
