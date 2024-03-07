@@ -17,6 +17,7 @@ from utils.file import get_extension_from_url
 from urllib.parse import urljoin
 import re
 import time
+import logging
 
 from dotenv import load_dotenv
 
@@ -25,6 +26,12 @@ load_dotenv()
 IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
 BINARY_LOCATION = os.getenv('BINARY_LOCATION')
+
+
+logger = logging.getLogger('django')
+
+logger.debug('********************This is a debug message IS_DEVELOPMENT', IS_DEVELOPMENT)
+logger.debug('********************This is a debug message WEBDRIVER_PATH', WEBDRIVER_PATH)
 
 print('IS_DEVELOPMENT', IS_DEVELOPMENT)
 print('WEBDRIVER_PATH', WEBDRIVER_PATH)
