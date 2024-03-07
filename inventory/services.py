@@ -118,7 +118,8 @@ def get_image_urls(url):
                 print(f"Image {idx}: {iURL}")
 
             return image_urls, raw_html, current_url
-
+        except Exception as e:
+            print('download img error', e)
         finally:
             # Close the browser when done
             driver.quit()
