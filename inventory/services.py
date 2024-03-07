@@ -103,12 +103,14 @@ def get_image_urls(url):
             print('click each next image')
 
             # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
-
-            wait = WebDriverWait(driver, 10)
-            li_elements = wait.until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
-            print('wait to get image')
-
+            li_elements = []
+            try:
+                wait = WebDriverWait(driver, 10)
+                li_elements = wait.until(
+                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
+                print('wait to get image')
+            except TimeoutException:
+                print("The elements did not load within the timeout period.")
             image_urls = []
 
             # Loop through the <li> elements and extract the image URLs
@@ -122,8 +124,7 @@ def get_image_urls(url):
                 print(f"Image {idx}: {iURL}")
 
             return image_urls, raw_html, current_url
-        except TimeoutException:
-            print("The elements did not load within the timeout period.")
+
         except Exception as e:
             print('download img error', e)
         finally:
