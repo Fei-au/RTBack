@@ -26,7 +26,8 @@ IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
 BINARY_LOCATION = os.getenv('BINARY_LOCATION')
 
-
+print('IS_DEVELOPMENT', IS_DEVELOPMENT)
+print('WEBDRIVER_PATH', WEBDRIVER_PATH)
 def create_driver():
     # Set the path to the Edge WebDriver executable
     options = Options()

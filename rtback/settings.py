@@ -120,24 +120,48 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Log configuration
+# # Log configuration
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         # "console": {
+#         #     "class": "logging.StreamHandler",
+#         # },
+#         "file": {
+#             "level": "DEBUG",
+#             "class": "logging.FileHandler",
+#             "filename": "/home/ky/code/RTBack/logs/django.log",
+#         },
+#     },
+#     # "root": {
+#     #     "handlers": ["console"],
+#     #     "level": "WARNING",
+#     # },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["console"],
+#             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+#             "propagate": False,
+#         },
+#     },
+# }
+
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            "filename": "django.log",
         },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
     },
 }

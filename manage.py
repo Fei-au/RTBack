@@ -18,6 +18,7 @@ def main():
     execute_from_command_line(sys.argv)
 def set_env():
     django_env = os.getenv('DJANGO_ENV', 'development')
+    print('django_env', django_env)
     env_file = f".env.{django_env}"
     load_dotenv(dotenv_path=env_file)
 
