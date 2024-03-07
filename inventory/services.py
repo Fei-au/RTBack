@@ -89,6 +89,7 @@ def get_image_urls(url):
             except:
                 print('do nothing')
             # Find the thumbnail elements with class name "a-spacing-small item imageThumbnail a-declarative"
+            print('here after do nothing')
             thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
                                                       'li.a-spacing-small.item.imageThumbnail.a-declarative')
 
@@ -519,6 +520,7 @@ def scrap(**kwargs):
         # print()
         print('url is', url)
         urls, text, c_r = get_image_urls(url)
+        print('after get image urls')
         if not code:
             code = getCodeByUrl(c_r)
         b_code = code
