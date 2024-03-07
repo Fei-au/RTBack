@@ -92,6 +92,7 @@ def get_image_urls(url):
             print('here after do nothing')
             thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
                                                       'li.a-spacing-small.item.imageThumbnail.a-declarative')
+            print('get the thumbnail_elements')
 
             # Interact with each thumbnail element and click the nested <span> with class name
             # "a-button a-button-thumbnail a-button-toggle"
@@ -99,11 +100,13 @@ def get_image_urls(url):
                 span_element = thumbnail.find_element(By.CSS_SELECTOR,
                                                       'span.a-button.a-button-thumbnail.a-button-toggle')
                 ActionChains(driver).move_to_element(span_element).click().perform()
+            print('click each next image')
 
             # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
             wait = WebDriverWait(driver, 4)
             li_elements = wait.until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li[class^="image item item"]')))
+            print('wait to get image')
 
             image_urls = []
 
@@ -112,7 +115,7 @@ def get_image_urls(url):
                 image_element = li_element.find_element(By.TAG_NAME, 'img')
                 image_url = image_element.get_attribute('src')
                 image_urls.append(image_url)
-
+            print('appended url')
             # Output the image URLs
             for idx, iURL in enumerate(image_urls, start=1):
                 print(f"Image {idx}: {iURL}")
