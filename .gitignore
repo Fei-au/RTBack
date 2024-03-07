@@ -4,4 +4,4 @@ Scripts
 pyvenv.cfg
 .idea
 media/
-__pycache__/
+**/__pycache__/
