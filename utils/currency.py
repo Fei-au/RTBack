@@ -7,6 +7,7 @@ def string_to_float_decimal(s):
         if isinstance(s, float) or isinstance(s,int):
             fv = s
         if isinstance(s,str):
+            s = float(s.replace(",", ""))
             fv = float(s)
         print('fv', fv)
         result = frm.format(price=fv)
