@@ -92,7 +92,7 @@ def get_image_urls(url):
             print('here after do nothing')
             thumbnail_elements = driver.find_elements(By.CSS_SELECTOR,
                                                       'li.a-spacing-small.item.imageThumbnail.a-declarative')
-            print('get the thumbnail_elements')
+            print('get the thumbnail_elements', thumbnail_elements)
 
             # Interact with each thumbnail element and click the nested <span> with class name
             # "a-button a-button-thumbnail a-button-toggle"
