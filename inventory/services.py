@@ -53,13 +53,13 @@ def create_driver():
     options.add_argument('--disable-gpu')  # applicable to windows os only
     options.add_argument('start-maximized')  #
 
-
     webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
     service = Service(executable_path=webdriver_path)
 
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
+    options.add_argument('--remote-debugging-port=9222')
 
     # Initialize chrome WebDriver with options
     driver = webdriver.Chrome(service=service, options=options)
