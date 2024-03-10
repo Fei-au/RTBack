@@ -46,7 +46,7 @@ def create_driver():
         options.binary_location = BINARY_LOCATION
     else:
         logger.info(f'**************This is a debug message add no sandbox')
-
+    options.binary_location = '/usr/bin/google-chrome'
     options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
     options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
