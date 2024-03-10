@@ -45,13 +45,14 @@ def create_driver():
         # local setting
         options.binary_location = BINARY_LOCATION
     else:
-        options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         logger.info(f'**************This is a debug message add no sandbox')
 
+    options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
     options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
     options.add_argument('--disable-gpu')  # applicable to windows os only
     options.add_argument('start-maximized')  #
+
 
     webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
