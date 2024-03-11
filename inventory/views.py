@@ -146,7 +146,7 @@ class StatusView(APIView):
         IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
         WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
         logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
-        logger.debug(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+        logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
         with open('django.log', 'a') as log_file:
             log_file.write(WEBDRIVER_PATH)
         items = Item_Status.objects.all().values('status', 'id');
