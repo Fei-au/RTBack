@@ -1,4 +1,5 @@
-from django.http import HttpResponse,  JsonResponse, HttpResponseServerError
+from django.http import HttpResponse,  JsonResponse, HttpResponseServerError, HttpResponseBadRequest
+from django.core.paginator import Paginator
 from .models import Item, Item_Status, Item_Category, Image, Purchase_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
 from django.views.decorators.csrf import csrf_exempt
@@ -16,9 +17,13 @@ from django.core.files.storage import default_storage
 from utils.file import image_upload_to, get_extension
 from rest_framework.renderers import JSONRenderer
 import logging
+import dotenv
 
+dotenv.load_dotenv()
 
 logger = logging.getLogger('django')
+
+DOMAIN = os.getenv('DOMAIN')
 
 # Create your views here.
 # Input code
@@ -80,7 +85,7 @@ def getItemInfoByCode(request, code):
             pics = []
             for p in pics_with_item[:3]:
                 pics.append({'id': p.id,
-                             'url': urljoin('http://35.209.176.71/', 'inventory' + p.local_image.url),
+                             'url': urljoin('http://', DOMAIN, '/inventory/media/' + p.local_image.url),
                              'has_saved': True})
 
             d['pics'] = pics
@@ -311,3 +316,30 @@ def getItem(request, id):
     except:
         print('do nothing')
     return HttpResponse('getItem success')
+
+@api_view(['GET'])
+def getItems(request):
+    print('get items')
+    try:
+        page_size = int(request.GET.get('page_size'))
+        page_number = int(request.GET.get('page_number'))
+        items = Item.objects.order_by('id').prefetch_related('images').select_related('add_staff').select_related('status')
+        paginator = Paginator(items, per_page=page_size)
+        page_obj = paginator.get_page(page_number)
+        serializer = ItemSerializer(page_obj, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        print('e', e)
+        return HttpResponseBadRequest('Page or page size is not well defined.')
+
+@api_view(['GET'])
+def getTotalItems(request):
+    print('get items')
+    try:
+        total = Item.objects.all().count()
+        return Response(total)
+    except Exception as e:
+        print('e', e)
+        return HttpResponseBadRequest('Page or page size is not well defined.')
+
+

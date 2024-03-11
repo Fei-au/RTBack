@@ -25,6 +25,8 @@ urlpatterns = [
                   path("delete_item/<int:pk>", views.deleteItem, name="delete_item"),  # Delete
                   path("update_item/<int:pk>", views.updateItem, name="update_item"),  # Put
                   path("get_item/<int:pk>", views.getItem, name="get_item"),  # Get
+                  path("get_items", views.getItems, name="get_items"),  # Get
+                  path("get_total_item", views.getTotalItems, name="get_total_item"),  # Get
 
                   # session, save case number
                   # Item list content
@@ -38,5 +40,6 @@ urlpatterns = [
                   path("image_upload", views.ImageUploadView.as_view(), name="image_upload"),
                   path("test_download_image", views.addImage, name="test_download_image"),
                   path("delete_image/<int:pk>", views.deleteImage, name="delete_image"),
+
                   # Simple requests
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT);

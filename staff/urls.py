@@ -8,5 +8,6 @@ urlpatterns = [
 
     # login user
     path("login", views.loginUser, name="login"),
+    path("login_admin", views.loginAdmin, name="login_admin"),
 
 ]
