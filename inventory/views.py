@@ -1,26 +1,14 @@
-from django.shortcuts import render, get_object_or_404
-from django.template import loader
-from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse, HttpResponseNotFound, \
-    HttpResponseServerError
-from .models import Item, Item_Status, Item_Category, Image
-from django.urls import reverse
-from django.views import generic
-from django.core import serializers
+from django.http import HttpResponse,  JsonResponse, HttpResponseServerError
+from .models import Item, Item_Status, Item_Category, Image, Purchase_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
-from django.db.models import Q
-from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer, ImageSerializer, \
-    ItemFmDtDictSerializesr
+from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer
 from staff.serializers import ProfileSerializer
-from django.views.decorators.http import require_POST
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, ValidationError
 from staff.models import Profile
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.views import APIView
-from rest_framework.parsers import FileUploadParser
 import json
 from urllib.parse import urljoin
 import os
@@ -40,29 +28,40 @@ logger = logging.getLogger('django')
 def getItemInfoByCode(request, code):
     try:
         items = None
+        print('code', code)
+
         if code.startswith('B'):
             items = Item.objects.filter(b_code=code)
         # elif code.startswith('X'):
         #     items = Item.objects.filter(fnsku_code=code)
         # elif code.startswith('LPN'):
         #     items = Item.objects.filter(lpn_code=code)
-        elif code.isdigit:
+        elif code.isdigit():
             items = Item.objects.filter(upc_ean_code=code)
         elif code.startswith('LPN'):
             items = Item.objects.filter(lpn_code=code)
         else:
-            print('here')
             return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
+        print('after search code in item table')
+        print('items value', items)
         if len(items) == 0:
+            print('queryset result len is 0')
             if code.startswith('B'):
+                print('code start with B and scrap on web')
                 return scrapInfoByBOCode(request, code)
-            elif code.isdigit:
+            elif code.isdigit():
+                print('code is digit and scrap on web')
                 return scrapInfoByNumCode(request, code=code)
             elif code.startswith('LPN'):
-                return JsonResponse({'status': 'not found',
-                                     'message': 'Code ' + code + ' not found in database, please find scan the digital code of this product.'})
-            print('here2')
-            return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
+                items = Purchase_List.objects.filter(lpn_code=code)
+                print('LPN items value', items)
+                if len(items) == 0:
+                    return JsonResponse({'status': 'not found',
+                                         'message': 'Code ' + code + ' not found in database, please scan the digital code of this product.'})
+                else:
+                    print('find lpn in purchase list')
+                    return scrapInfoByBOCode(request, items[0].b_code)
+            # return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
         else:
             serialize_item = ItemSerializer(items[0])
             # return Response({'status': "success", 'data': serialize_item.data})

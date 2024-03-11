@@ -51,6 +51,18 @@ class Item_Status(models.Model):
         return self.status
 
 
+class Purchase_List(models.Model):
+
+    title = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    b_code = models.CharField(max_length=20, blank=True, null=True)
+    upc_ean_code = models.CharField(max_length=20, blank=True, null=True)
+    lpn_code = models.CharField(max_length=20, blank=True, null=True)
+    msrp_price = models.DecimalField(max_digits=10,decimal_places=2,blank=True,null=True)
+    add_date = models.DateTimeField(auto_now_add=True, blank=True, null=True) # First add date
+    # supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
+
+
 class Item(models.Model):
     class StockStatus(models.TextChoices):
         IN_STOCK = "In stock", "In stock",
@@ -81,6 +93,7 @@ class Item(models.Model):
     add_staff = models.ForeignKey('staff.Profile', on_delete=models.DO_NOTHING, blank=True, null=True) # Staff who add the item
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
     stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK,blank=True,null=True)
+    url = models.URLField(max_length=200, blank=True, null=True)
     location = models.CharField(max_length=10, blank=True,null=True)
         # use one field location instead of two fields
     # shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...
