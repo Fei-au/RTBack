@@ -12,10 +12,15 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 #  Media base dir
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -31,7 +36,7 @@ MEDIA_URL = '/media/'
 SECRET_KEY = 'django-insecure-l&dw^_-lz1o*+akmdgo4k09=6ko010+q(dqfi+c_m3c$hqe%3#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if IS_DEVELOPMENT else False
 
 ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.168.2.144', '35.209.176.71', ' 70.31.50.163']
 
@@ -41,7 +46,7 @@ ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.1
 INSTALLED_APPS = [
     'inventory.apps.InventoryConfig',
     'staff.apps.StaffConfig',
-'corsheaders',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -161,7 +166,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
     },
