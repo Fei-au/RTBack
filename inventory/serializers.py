@@ -7,13 +7,12 @@ import dotenv
 dotenv.load_dotenv()
 DOMAIN = os.getenv('DOMAIN')
 
-class ItemStatusSerializer(serializers.ModelSerializer):
 
+class ItemStatusSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     class Meta:
         model = Item_Status
         fields = ['id', 'status']
-        # fields = '__all__'
-
 class ImageSerializer(serializers.ModelSerializer):
     full_image_url=serializers.SerializerMethodField()
     class Meta:
@@ -38,8 +37,8 @@ class ItemSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)  # Assuming 'images' is the related_name
     add_staff = ProfileSerializer(read_only=True)  # Use the related name
     status = ItemStatusSerializer(read_only=True)
+    status_id = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status', write_only=True)
     category_id = serializers.CharField(source='category.id', read_only=True)
-    status_id = serializers.CharField(source='status.id', read_only=True)
 
     # category = serializers.PrimaryKeyRelatedField(queryset=Item_Category.objects.all(), source='category_id')
     # status = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status_id')
@@ -47,15 +46,8 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = '__all__'
 
-    # def create(self, validated_data):
-    #     validated_data['item_numer'] = get_next_item_number(validated_data.staff_id)
 
 
-class ItemStatusSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
-    class Meta:
-        model = Item_Status
-        fields = '__all__'
 
 class ItemCategorySerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string

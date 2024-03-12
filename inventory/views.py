@@ -148,12 +148,12 @@ class StatusView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request, format=None):
-        IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
-        WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
-        logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
-        logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
-        with open('django.log', 'a') as log_file:
-            log_file.write(WEBDRIVER_PATH)
+        # IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
+        # WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
+        # logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+        # logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+        # with open('django.log', 'a') as log_file:
+        #     log_file.write(WEBDRIVER_PATH)
         items = Item_Status.objects.all().values('status', 'id');
         serialize_sts = ItemStatusSerializer(items, many=True)
         return Response(serialize_sts.data);
@@ -301,13 +301,23 @@ def deleteItem(request):
         print('do nothing')
     return HttpResponse('deleteItem success')
 
-
-def updateItem(request, id):
+@api_view(['PATCH'])
+@csrf_exempt
+def updateItem(request, pk):
     try:
-        print('updateItem')
-    except:
-        print('do nothing')
-    return HttpResponse('updateItem success')
+        item_instance = Item.objects.get(pk=pk)
+    except Item.DoesNotExist:
+        return HttpResponseBadRequest('Error, item does not exist.')
+    print('request.data', request.data)
+    serializer = ItemSerializer(item_instance, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return HttpResponse('Update item success!')
+    else:
+        print(serializer.errors)
+        return HttpResponseBadRequest('Error, item field invalid.')
+
+
 
 
 def getItem(request, id):
