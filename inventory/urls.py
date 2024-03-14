@@ -27,6 +27,7 @@ urlpatterns = [
                   path("get_item/<int:pk>", views.getItem, name="get_item"),  # Get
                   path("get_items", views.getItems, name="get_items"),  # Get
                   path("get_total_item", views.getTotalItems, name="get_total_item"),  # Get
+                  path("export_items", views.exportItems, name="export_items"),  # Get
 
                   # session, save case number
                   # Item list content

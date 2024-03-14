@@ -1,4 +1,4 @@
-from django.http import HttpResponse,  JsonResponse, HttpResponseServerError, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseServerError, HttpResponseBadRequest
 from django.core.paginator import Paginator
 from .models import Item, Item_Status, Item_Category, Image, Purchase_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
@@ -10,11 +10,14 @@ from rest_framework.exceptions import APIException, ValidationError
 from staff.models import Profile
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.views import APIView
+import datetime
+import csv
+import zipfile
 import json
 from urllib.parse import urljoin
 import os
 from django.core.files.storage import default_storage
-from utils.file import image_upload_to, get_extension
+from utils.file import image_upload_to, get_extension, create_unique_filename, create_unique_imagename
 from rest_framework.renderers import JSONRenderer
 import logging
 import dotenv
@@ -24,6 +27,7 @@ dotenv.load_dotenv()
 logger = logging.getLogger('django')
 
 DOMAIN = os.getenv('DOMAIN')
+
 
 # Create your views here.
 # Input code
@@ -46,7 +50,8 @@ def getItemInfoByCode(request, code):
         elif code.startswith('LPN'):
             items = Item.objects.filter(lpn_code=code)
         else:
-            return JsonResponse({'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
+            return JsonResponse(
+                {'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
         print('after search code in item table')
         print('items value', items)
         if len(items) == 0:
@@ -301,6 +306,7 @@ def deleteItem(request):
         print('do nothing')
     return HttpResponse('deleteItem success')
 
+
 @api_view(['PATCH'])
 @csrf_exempt
 def updateItem(request, pk):
@@ -318,8 +324,6 @@ def updateItem(request, pk):
         return HttpResponseBadRequest('Error, item field invalid.')
 
 
-
-
 def getItem(request, id):
     try:
         print('getItem')
@@ -327,13 +331,15 @@ def getItem(request, id):
         print('do nothing')
     return HttpResponse('getItem success')
 
+
 @api_view(['GET'])
 def getItems(request):
     print('get items')
     try:
         page_size = int(request.GET.get('page_size'))
         page_number = int(request.GET.get('page_number'))
-        items = Item.objects.order_by('id').prefetch_related('images').select_related('add_staff').select_related('status')
+        items = Item.objects.order_by('id').prefetch_related('images').select_related('add_staff').select_related(
+            'status')
         paginator = Paginator(items, per_page=page_size)
         page_obj = paginator.get_page(page_number)
         serializer = ItemSerializer(page_obj, many=True)
@@ -341,6 +347,7 @@ def getItems(request):
     except Exception as e:
         print('e', e)
         return HttpResponseBadRequest('Page or page size is not well defined.')
+
 
 @api_view(['GET'])
 def getTotalItems(request):
@@ -353,3 +360,64 @@ def getTotalItems(request):
         return HttpResponseBadRequest('Page or page size is not well defined.')
 
 
+@api_view(['POST'])
+def exportItems(request):
+    try:
+        ids = []
+        auction = request.data['auction']
+        data = request.data['data']
+        # put ids into a list
+        for x in data:
+            ids.append(x['id'])
+        print('ids', ids)
+        # get items by ids, return a dictionary items with id as key
+        items = Item.objects.filter(pk__in=ids).prefetch_related('images')
+        print('image', items[0].images.all())
+        for x in data:
+            x['item'] = items.get(pk=x['id'])
+        # export items to csv
+        filename = "Auction {}".format(auction)
+        date_prefix = datetime.datetime.now().strftime('%Y%m%d')
+        dir = f'{os.getenv("EXPORT_DIR")}/{date_prefix}'
+        extension = '.csv'
+        # create unique filename, like Auction 65_1, Auction 65_2
+        full_path = create_unique_filename(dir, filename, extension)
+        with open(full_path, 'x', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([])
+            for x in data:
+                code = x.get('item').b_code or x.get('item').upc_ean_code or x.get('item').lpn_code or 'B09999999'
+                writer.writerow([code,
+                                 x.get('item').title,
+                                 x.get('description'),
+                                 x.get('item').msrp_price,
+                                 x.get('sequence'),
+                                 x.get('item').bid_start_price,
+                                 x.get('lot_number'),
+                                 ])
+
+        # create images zip file
+        zip_extension = '.zip'
+        zip_full_path = create_unique_filename(dir, filename, zip_extension)
+        with zipfile.ZipFile(zip_full_path, 'w') as img_zip:
+            img_zip.write(full_path, arcname=os.path.basename(full_path))
+            for x in data:
+                lot_number = x.get('lot_number')
+                existing_names = []
+                print('images', x.get('item').images.all())
+                for img in x.get('item').images.all():
+                    base_name, extension = os.path.splitext(img.local_image.url)
+                    # create a unique image name
+                    img_name = create_unique_imagename(existing_names, str(lot_number) + extension)
+                    # write to zip file
+                    img_zip.write(os.getenv('MEDIA_DIR')+img.local_image.url, arcname=f'imgs/{img_name}')
+                    # add name to existing names
+                    existing_names.append(img_name)
+        response = HttpResponse(open(zip_full_path, 'rb'), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={os.path.basename(zip_full_path)}'
+        os.remove(zip_full_path)
+        return response
+    except IOError:
+        return HttpResponseServerError('Read zip file error.')
+    except Exception as e:
+        return HttpResponseBadRequest('Export items to CSV error.')

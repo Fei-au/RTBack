@@ -63,6 +63,7 @@ class Purchase_List(models.Model):
     # supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
 
 
+
 class Item(models.Model):
     class StockStatus(models.TextChoices):
         IN_STOCK = "In stock", "In stock",
@@ -112,13 +113,15 @@ class Image(models.Model):
     local_image = models.ImageField(upload_to=upload_to, blank=True, null=True);
     external_url = models.URLField(max_length=255, blank=True, null=True);
 
-    # def __str__(self):
-    #     return f"Image for {self.item.title}"
+    def __str__(self):
+        return f"Image for {self.item.id}"
     def delete(self, *args, **kwargs):
         if self.local_image:
             if os.path.isfile(self.local_image.path):
                 os.remove(self.local_image.path)
         super().delete(*args, **kwargs)
+
+
 
 
 class Order(models.Model):
@@ -173,3 +176,9 @@ class OrderItem(models.Model):
     note=models.CharField(max_length=200, blank=True,null=True)
 
 
+class Auction_Product_List(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.SET_NULL, blank=True, null=True)
+    auction = models.IntegerField()
+    sequence = models.IntegerField()
+    description = models.TextField(blank=True, null=True)
+    lot_number = models.IntegerField()
