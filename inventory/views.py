@@ -1,9 +1,10 @@
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError, HttpResponseBadRequest
 from django.core.paginator import Paginator
-from .models import Item, Item_Status, Item_Category, Image, Purchase_List
+from django.db.models import Max
+from .models import Item, Item_Status, Item_Category, Image, Purchase_List, Auction_Product_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer
+from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer, AuctionProductListSerializer
 from staff.serializers import ProfileSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, ValidationError
@@ -362,6 +363,7 @@ def getTotalItems(request):
 
 @api_view(['POST'])
 def exportItems(request):
+    zip_full_path = None
     try:
         ids = []
         auction = request.data['auction']
@@ -372,7 +374,6 @@ def exportItems(request):
         print('ids', ids)
         # get items by ids, return a dictionary items with id as key
         items = Item.objects.filter(pk__in=ids).prefetch_related('images')
-        print('image', items[0].images.all())
         for x in data:
             x['item'] = items.get(pk=x['id'])
         # export items to csv
@@ -413,11 +414,70 @@ def exportItems(request):
                     img_zip.write(os.getenv('MEDIA_DIR')+img.local_image.url, arcname=f'imgs/{img_name}')
                     # add name to existing names
                     existing_names.append(img_name)
-        response = HttpResponse(open(zip_full_path, 'rb'), content_type='application/zip')
-        response['Content-Disposition'] = f'attachment; filename={os.path.basename(zip_full_path)}'
-        os.remove(zip_full_path)
-        return response
+
+        # insert items to auction product list
+        print('before insert list')
+        insert_list = []
+        for x in data:
+            d = {
+                'auction': auction,
+                'sequence': x.get('sequence'),
+                'description': x.get('description'),
+                'lot_number': x.get('lot_number'),
+                'item': x.get('item').id,
+            }
+            insert_list.append(d)
+        print('insert_list', insert_list)
+        serializer = AuctionProductListSerializer(data=insert_list, many=True)
+        print('after serialized')
+        if serializer.is_valid():
+            print('valid serializer')
+            serializer.save()
+            print('after save serializer')
+            response = HttpResponse(open(zip_full_path, 'rb'), content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(zip_full_path)}'
+            return response
+        else:
+            print('not valid serializer')
+            os.remove(full_path)
+            raise ValidationError(detail=serializer.errors)
     except IOError:
         return HttpResponseServerError('Read zip file error.')
     except Exception as e:
+        print('err', e)
         return HttpResponseBadRequest('Export items to CSV error.')
+    finally:
+        if os.path.exists(zip_full_path):
+            os.remove(zip_full_path)
+@api_view(['GET'])
+def getNextLotNumber(request, auction):
+    m = Auction_Product_List.objects.filter(auction=auction).aggregate(Max('lot_number'))['lot_number__max']
+    if not m:
+        return Response(1+1)
+    return Response(m + 1)
+@api_view(['GET'])
+def getAvailableSequences(request, auction):
+    try:
+        m = Auction_Product_List.objects.filter(auction=auction).aggregate(Max('sequence'))['sequence__max']
+        sequences = list(Auction_Product_List.objects.filter(auction=auction).values_list('sequence', flat=True))
+        if not m:
+            return Response({'range': [[2, 9999]], 'list': []})
+        l = [[]]
+        for i in range(2, m+1):
+            last = l[len(l) - 1]
+            if i in sequences:
+                if len(last) == 1:
+                    last.append(i-1)
+                    l.append([])
+                continue
+            else:
+                if len(last) == 0:
+                    last.append(i)
+                elif len(last) == 1:
+                    continue
+        last = l[len(l) - 1]
+        last.append(m+1)
+        last.append(9999)
+        return Response({'range': l, 'list': sequences})
+    except Exception as e:
+        print('e', e)

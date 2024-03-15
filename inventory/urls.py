@@ -29,6 +29,8 @@ urlpatterns = [
                   path("get_total_item", views.getTotalItems, name="get_total_item"),  # Get
                   path("export_items", views.exportItems, name="export_items"),  # Get
 
+
+
                   # session, save case number
                   # Item list content
                   # path("get_status",views.GetStatusView.as_view(),name="get_status"),
@@ -41,6 +43,8 @@ urlpatterns = [
                   path("image_upload", views.ImageUploadView.as_view(), name="image_upload"),
                   path("test_download_image", views.addImage, name="test_download_image"),
                   path("delete_image/<int:pk>", views.deleteImage, name="delete_image"),
+                  path("get_next_lot_number/<int:auction>", views.getNextLotNumber, name="get_next_lot_number"),
+                  path("get_available_sequences/<int:auction>", views.getAvailableSequences, name="get_available_sequences"),
 
                   # Simple requests
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT);

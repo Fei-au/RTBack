@@ -1,4 +1,4 @@
-from .models import Item, Item_Category, Item_Status, Image
+from .models import Item, Item_Category, Item_Status, Image, Auction_Product_List
 from staff.serializers import ProfileSerializer
 from rest_framework import serializers
 import os
@@ -13,6 +13,11 @@ class ItemStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item_Status
         fields = ['id', 'status']
+
+class AuctionProductListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Auction_Product_List
+        fields = '__all__'
 class ImageSerializer(serializers.ModelSerializer):
     full_image_url=serializers.SerializerMethodField()
     class Meta:
