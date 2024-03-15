@@ -218,7 +218,7 @@ class AddNewItemView(APIView):
                             id = int(id)
                         for id in ids:
                             saved_img = Image.objects.get(id=id)
-                            # scrapped image and haven't set foreign key to any item
+                            # scrapped image but haven't set foreign key to any item
                             if not saved_img.item_id:
                                 print('here not')
 

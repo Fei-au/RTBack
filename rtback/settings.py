@@ -23,7 +23,7 @@ IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 #  Media base dir
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(os.getenv('MEDIA_DIR'), 'media')
 
 # Image base dir
 MEDIA_URL = '/media/'
