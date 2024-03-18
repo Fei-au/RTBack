@@ -71,7 +71,7 @@ def getItemInfoByCode(request, code):
                                          'message': 'Code ' + code + ' not found in database, please scan the digital code of this product.'})
                 else:
                     print('find lpn in purchase list')
-                    return scrapInfoByBOCode(request, items[0].b_code)
+                    return scrapInfoByBOCode(request, items[0].b_code, code)
             # return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
         else:
             serialize_item = ItemSerializer(items[0])
@@ -112,9 +112,9 @@ def getItemInfoByCode(request, code):
         print(e)
 
 
-def scrapInfoByBOCode(request, code):
+def scrapInfoByBOCode(request, code, lpn):
     url = getUrl(code)
-    result = scrap(url=url, code=code)
+    result = scrap(url=url, code=code, lpn=lpn)
     print('result', result)
     if result['status'] == 1:
         return JsonResponse({'status': 'success', 'data': result['data']})

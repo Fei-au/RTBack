@@ -521,6 +521,8 @@ def scrap(**kwargs):
     url = kwargs.get('url')
     print('pass url')
     code = kwargs.get('code')
+    lpn = kwargs.get('lpn')
+
     print('pass code')
     # try:
     print('here')
@@ -556,7 +558,7 @@ def scrap(**kwargs):
         # upc_code = None
         # ean_code = None
         # fnksu_code = None
-        # lpn_code = None
+        lpn_code = lpn or None
         pics = []
         for u in urls:
             img_instance = download_image(u)
@@ -587,7 +589,7 @@ def scrap(**kwargs):
                 # 'upc_code': upc_code,
                 # 'ean_code': ean_code,
                 # 'fnksu_code': fnksu_code,
-                # 'lpn_code': lpn_code,
+                'lpn_code': lpn_code,
                 'pics': pics,
                 'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                 'customize_color': customize_color,
