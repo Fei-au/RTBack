@@ -548,6 +548,8 @@ def scrap(**kwargs):
         # response = requests.get(url)
         # print()
         print('url is', url)
+        logger.info(f'**************This is a debug message url: {url}')
+
         urls, text, c_r = get_image_urls(url)
         print('after get image urls')
         if not code:
