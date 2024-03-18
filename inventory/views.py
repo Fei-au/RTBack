@@ -408,7 +408,7 @@ def exportItems(request):
                                  x.get('item').msrp_price,
                                  x.get('sequence'),
                                  x.get('item').bid_start_price,
-                                 x.get('lot_number'),
+                                 x.get('image_number'),
                                  ])
 
         # create images zip file
@@ -417,13 +417,13 @@ def exportItems(request):
         with zipfile.ZipFile(zip_full_path, 'w') as img_zip:
             img_zip.write(full_path, arcname=os.path.basename(full_path))
             for x in data:
-                lot_number = x.get('lot_number')
+                image_number = x.get('image_number')
                 existing_names = []
                 print('images', x.get('item').images.all())
                 for img in x.get('item').images.all():
                     base_name, extension = os.path.splitext(img.local_image.url)
                     # create a unique image name
-                    img_name = create_unique_imagename(existing_names, str(lot_number) + extension)
+                    img_name = create_unique_imagename(existing_names, str(image_number) + extension)
                     # write to zip file
                     img_zip.write(os.getenv('MEDIA_DIR')+img.local_image.url, arcname=f'imgs/{img_name}')
                     # add name to existing names
@@ -437,7 +437,7 @@ def exportItems(request):
                 'auction': auction,
                 'sequence': x.get('sequence'),
                 'description': x.get('description'),
-                'lot_number': x.get('lot_number'),
+                'image_number': x.get('image_number'),
                 'item': x.get('item').id,
             }
             insert_list.append(d)
@@ -465,7 +465,7 @@ def exportItems(request):
             os.remove(zip_full_path)
 @api_view(['GET'])
 def getNextLotNumber(request, auction):
-    m = Auction_Product_List.objects.filter(auction=auction).aggregate(Max('lot_number'))['lot_number__max']
+    m = Auction_Product_List.objects.filter(auction=auction).aggregate(Max('image_number'))['image_number__max']
     if not m:
         return Response(1+1)
     return Response(m + 1)

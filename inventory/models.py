@@ -181,4 +181,4 @@ class Auction_Product_List(models.Model):
     auction = models.IntegerField()
     sequence = models.IntegerField()
     description = models.TextField(blank=True, null=True)
-    lot_number = models.IntegerField()
+    image_number = models.IntegerField()
