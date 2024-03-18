@@ -47,4 +47,4 @@ urlpatterns = [
                   path("get_available_sequences/<int:auction>", views.getAvailableSequences, name="get_available_sequences"),
 
                   # Simple requests
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT);
+              ]

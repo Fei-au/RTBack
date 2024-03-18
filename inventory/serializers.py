@@ -5,7 +5,7 @@ import os
 import dotenv
 
 dotenv.load_dotenv()
-DOMAIN = os.getenv('DOMAIN')
+MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
 
 
 class ItemStatusSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class ImageSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.local_image)
         else:
             # You can define a default domain if the request context is not available
-            return f"http://{DOMAIN}/inventory/media/{obj.local_image}"
+            return f"http://{MEDIA_DOMAIN}{obj.local_image.url}"
 
     def create(self, validated_data):
         print('validated_data')

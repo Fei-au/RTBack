@@ -26,6 +26,7 @@ load_dotenv()
 IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
 BINARY_LOCATION = os.getenv('BINARY_LOCATION')
+MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
 
 
 logger = logging.getLogger('django')
@@ -261,7 +262,7 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
     for u in urls:
         img_instance = download_image(u)
         pics.append({'id': img_instance.id,
-                     'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
+                     'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
                      'has_saved': True})
     soup = BeautifulSoup(text, 'html.parser')
     title = get_title(soup)
@@ -560,7 +561,7 @@ def scrap(**kwargs):
         for u in urls:
             img_instance = download_image(u)
             pics.append({'id': img_instance.id,
-                         'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
+                         'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
                          'has_saved': True})
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)

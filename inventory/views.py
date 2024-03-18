@@ -27,7 +27,7 @@ dotenv.load_dotenv()
 
 logger = logging.getLogger('django')
 
-DOMAIN = os.getenv('DOMAIN')
+MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
 
 
 # Create your views here.
@@ -86,15 +86,27 @@ def getItemInfoByCode(request, code):
             d['price'] = d['msrp_price']
             print('d, id', d['id'])
             print('d, id type', type(d['id']))
-            pics_with_item = Image.objects.filter(item_id=d['id'])
-            print('pics_with_item', pics_with_item)
-            pics = []
-            for p in pics_with_item[:3]:
-                pics.append({'id': p.id,
-                             'url': urljoin('http://', DOMAIN, '/inventory/media/' + p.local_image.url),
-                             'has_saved': True})
 
+            pics = []
+            print(type(d['images']))
+            print(d['images'])
+            for p in d['images'][:3]:
+                temp_dict = {}
+                for key, value in p.items():
+                    temp_dict[key] = value
+                    if key == 'full_image_url':
+                        temp_dict['url'] = value
+                pics.append(temp_dict)
             d['pics'] = pics
+
+            # pics_with_item = Image.objects.filter(item_id=d['id'])
+            # print('pics_with_item', pics_with_item)
+            # pics = []
+            # for p in pics_with_item[:3]:
+            #     pics.append({'id': p.id,
+            #                  'url': urljoin('http://', MEDIA_DOMAIN, p.local_image.url),
+            #                  'has_saved': True})
+            # d['pics'] = pics
             return Response({'status': "success", 'data': d})
     except Exception as e:
         print(e)
@@ -191,6 +203,7 @@ class AddNewItemView(APIView):
                 print('here1')
                 stf = Profile.objects.get(user_id=itm['add_staff'])
                 print('here2', type(itm['add_staff']))
+                print('here3', itm['status_id'])
 
                 # Set staff last issued number + 1 to new added item number
                 data = itm.copy()
