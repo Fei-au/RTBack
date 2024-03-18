@@ -211,6 +211,7 @@ class AddNewItemView(APIView):
                 # print('c id******',data['category_id'])
                 # print('c id******',type(data['category_id']))
                 if not itm.get('item_number'):
+                    print('here4', stf.last_issued_number)
                     if stf.last_issued_number + 1 <= stf.item_end:
                         data['item_number'] = stf.last_issued_number + 1
                     else:
