@@ -112,7 +112,9 @@ def getItemInfoByCode(request, code):
         print(e)
 
 
-def scrapInfoByBOCode(request, code, lpn):
+def scrapInfoByBOCode(request, **kwargs):
+    code = kwargs.get('code')
+    lpn = kwargs.get('lpn') or None
     url = getUrl(code)
     result = scrap(url=url, code=code, lpn=lpn)
     print('result', result)
