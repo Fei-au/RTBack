@@ -28,6 +28,7 @@ urlpatterns = [
                   path("get_items", views.getItems, name="get_items"),  # Get
                   path("get_total_item", views.getTotalItems, name="get_total_item"),  # Get
                   path("export_items", views.exportItems, name="export_items"),  # Get
+                  path("get_last_items/<int:staff_id>", views.getLastItems, name="get_last_items"),  # Get
 
 
 

@@ -112,7 +112,8 @@ def getItemInfoByCode(request, code):
         print(e)
 
 
-def scrapInfoByBOCode(request, code, lpn):
+def scrapInfoByBOCode(request, **kwargs):
+
     url = getUrl(code)
     result = scrap(url=url, code=code, lpn=lpn)
     print('result', result)
@@ -201,8 +202,8 @@ class AddNewItemView(APIView):
             # print('here', request.FILES.get('image').uri)
             if itm:
                 print('here1')
-                stf = Profile.objects.get(user_id=itm['add_staff'])
-                print('here2', type(itm['add_staff']))
+                stf = Profile.objects.get(user_id=itm['add_staff_id'])
+                print('here2', type(itm['add_staff_id']))
                 print('here3', itm['status_id'])
 
                 # Set staff last issued number + 1 to new added item number
@@ -210,15 +211,19 @@ class AddNewItemView(APIView):
                 # data['category_id'] = int(data['category_id'])
                 # print('c id******',data['category_id'])
                 # print('c id******',type(data['category_id']))
+                new_last_issued_number = None
                 if not itm.get('item_number'):
                     print('here4', stf.last_issued_number)
                     if stf.last_issued_number + 1 <= stf.item_end:
                         data['item_number'] = stf.last_issued_number + 1
+                        new_last_issued_number = stf.last_issued_number + 1
                     else:
                         raise ValidationError(detail="Item number has reach the staff's limit, please contact admin")
+                else:
+                    new_last_issued_number = itm.get('item_number')
                 # Serialize data and save it
                 serializer_itm = ItemSerializer(data=data)
-                serializer_stf = ProfileSerializer(stf, data={'last_issued_number': stf.last_issued_number + 1},
+                serializer_stf = ProfileSerializer(stf, data={'last_issued_number': new_last_issued_number},
                                                    partial=True)
                 if serializer_itm.is_valid() and serializer_stf.is_valid():
                     itm_instance = serializer_itm.save()
@@ -312,14 +317,16 @@ def deleteImage(request, pk):
     image_instance.delete()
     return HttpResponse('success')
 
-
-def deleteItem(request):
+@api_view(['DELETE'])
+@csrf_exempt
+def deleteItem(request, pk):
     try:
-        print('deleteItem')
-        print(request.body)
-    except:
-        print('do nothing')
-    return HttpResponse('deleteItem success')
+        Item.objects.filter(pk=pk).delete()
+        logger.debug('delete success')
+        return Response({'status': 'success'})
+    except Exception as e:
+        logger.error(e)
+        return HttpResponseServerError('Server error')
 
 
 @api_view(['PATCH'])
@@ -495,3 +502,28 @@ def getAvailableSequences(request, auction):
         return Response({'range': l, 'list': sequences})
     except Exception as e:
         print('e', e)
+
+@api_view(['GET'])
+def getLastItems(request, staff_id):
+    try:
+        page_number_from_last = request.query_params.get('page_number_from_last', None)
+        if not page_number_from_last:
+            return HttpResponseBadRequest('Please send page number from last.')
+        page_number_from_last = int(page_number_from_last)
+        staff_id = int(staff_id)
+        print(staff_id)
+        items = Item.objects.filter(add_staff_id=staff_id).order_by('add_date')
+        paginator = Paginator(items, 10)
+        last_page_number = paginator.num_pages
+        if last_page_number + 1 - page_number_from_last <= 0:
+            return Response([])
+        page_number = max(1, last_page_number + 1 - page_number_from_last)  # Ensure it does not go below 1
+        page_items = paginator.page(page_number)
+        reversed_items = list(page_items.object_list)[::-1]
+        print('second_last_page', reversed_items)
+        serializer = ItemSerializer(reversed_items, many=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        print('e', e)
+

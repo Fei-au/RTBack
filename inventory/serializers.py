@@ -1,5 +1,6 @@
 from .models import Item, Item_Category, Item_Status, Image, Auction_Product_List
 from staff.serializers import ProfileSerializer
+from staff.models import Profile
 from rest_framework import serializers
 import os
 import dotenv
@@ -44,7 +45,7 @@ class ItemSerializer(serializers.ModelSerializer):
     status = ItemStatusSerializer(read_only=True)
     status_id = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status', write_only=True)
     category_id = serializers.CharField(source='category.id', read_only=True)
-
+    add_staff_id = serializers.PrimaryKeyRelatedField(queryset=Profile.objects.all(), source='add_staff', write_only=True)
     # category = serializers.PrimaryKeyRelatedField(queryset=Item_Category.objects.all(), source='category_id')
     # status = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status_id')
     class Meta:
