@@ -25,6 +25,12 @@ urlpatterns = [
                   path("delete_item/<int:pk>", views.deleteItem, name="delete_item"),  # Delete
                   path("update_item/<int:pk>", views.updateItem, name="update_item"),  # Put
                   path("get_item/<int:pk>", views.getItem, name="get_item"),  # Get
+                  path("get_items", views.getItems, name="get_items"),  # Get
+                  path("get_total_item", views.getTotalItems, name="get_total_item"),  # Get
+                  path("export_items", views.exportItems, name="export_items"),  # Get
+                  path("get_last_items/<int:staff_id>", views.getLastItems, name="get_last_items"),  # Get
+
+
 
                   # session, save case number
                   # Item list content
@@ -38,5 +44,8 @@ urlpatterns = [
                   path("image_upload", views.ImageUploadView.as_view(), name="image_upload"),
                   path("test_download_image", views.addImage, name="test_download_image"),
                   path("delete_image/<int:pk>", views.deleteImage, name="delete_image"),
+                  path("get_next_lot_number/<int:auction>", views.getNextLotNumber, name="get_next_lot_number"),
+                  path("get_available_sequences/<int:auction>", views.getAvailableSequences, name="get_available_sequences"),
+
                   # Simple requests
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT);
+              ]

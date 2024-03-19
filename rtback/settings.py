@@ -12,13 +12,18 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 #  Media base dir
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(os.getenv('MEDIA_DIR'), 'media')
 
 # Image base dir
 MEDIA_URL = '/media/'
@@ -31,7 +36,7 @@ MEDIA_URL = '/media/'
 SECRET_KEY = 'django-insecure-l&dw^_-lz1o*+akmdgo4k09=6ko010+q(dqfi+c_m3c$hqe%3#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if IS_DEVELOPMENT else False
 
 ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.168.2.144', '35.209.176.71', ' 70.31.50.163']
 
@@ -41,7 +46,7 @@ ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.1
 INSTALLED_APPS = [
     'inventory.apps.InventoryConfig',
     'staff.apps.StaffConfig',
-'corsheaders',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,7 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -61,9 +66,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
+
 # CORS_ALLOWED_ORIGINS = [
 #     'http://127.0.0.1:8001',
+#     'http://localhost:3001',
+#     'http://192.168.2.144:3001',
 # ]
 
 ROOT_URLCONF = 'rtback.urls'
@@ -97,6 +106,7 @@ DATABASES = {
         "USER": "root",
         "PASSWORD": "root",
         "HOST": "34.29.14.234",
+        # "HOST": "localhost",
         "PORT": "3306",
     }
 }
@@ -152,7 +162,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
             "filename": "django.log",
         },
@@ -160,7 +170,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
     },

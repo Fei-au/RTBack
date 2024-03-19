@@ -15,13 +15,15 @@ def creatUser(request):
     password = request.POST.get('password')
     email = request.POST.get('email')
     is_staff = request.POST.get('is_staff')
-    item_start = request.POST.get('item_start')
-    item_end = request.POST.get('item_end')
-    item_version = request.POST.get('item_version')
-    last_issued_number = request.POST.get('last_issued_number')
+    is_superuser = request.POST.get('is_superuser')
     if not User.objects.filter(username=username).exists():
-        u = User.objects.create_user(username, email, password, is_staff=is_staff, is_active=True)
+        print('creating user...')
+        u = User.objects.create_user(username=username, email=email, password=password, is_active=True, is_superuser=is_superuser)
         if is_staff:
+            item_start = request.POST.get('item_start')
+            item_end = request.POST.get('item_end')
+            item_version = request.POST.get('item_version')
+            last_issued_number = request.POST.get('last_issued_number')
             return creatStaff(request._request, u, {
                 "item_start": item_start,
                 "item_end": item_end,
@@ -59,3 +61,16 @@ def loginUser(request):
     else:
         print('here')
         return Response('login failed.', status=403)
+
+@csrf_exempt
+@api_view(['POST'])
+def loginAdmin(request):
+    json_data = request.data
+    user = authenticate(request, username=json_data.get('username'), password=json_data.get('password'))
+    if user is not None:
+        if user.is_superuser:
+            return Response({'status': 'success', 'user_id': user.id}, status=200)
+        else:
+            return Response('login failed. Please login admin user.', status=403)
+    else:
+        return Response('login failed. User does not exist.', status=403)

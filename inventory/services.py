@@ -26,6 +26,7 @@ load_dotenv()
 IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
 BINARY_LOCATION = os.getenv('BINARY_LOCATION')
+MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
 
 
 logger = logging.getLogger('django')
@@ -36,22 +37,22 @@ print('WEBDRIVER_PATH', WEBDRIVER_PATH)
 def create_driver():
     # Set the path to the Edge WebDriver executable
 
-    logger.debug(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
-    logger.debug(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+    logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+    logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
 
 
     options = Options()
     if IS_DEVELOPMENT:
         # local setting
+        options.add_argument('--disable-gpu')  # applicable to windows os only
         options.binary_location = BINARY_LOCATION
     else:
         options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         logger.info(f'**************This is a debug message add no sandbox')
-
+    # options.binary_location = '/usr/bin/google-chrome'
     options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-    options.add_argument('--disable-gpu')  # applicable to windows os only
-    options.add_argument('start-maximized')  #
+    # options.add_argument('start-maximized')  #
 
     webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
@@ -59,9 +60,10 @@ def create_driver():
 
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
+    options.add_argument('--remote-debugging-port=9222')
 
     # Initialize chrome WebDriver with options
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(options=options)
     return driver
 
 
@@ -260,7 +262,7 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
     for u in urls:
         img_instance = download_image(u)
         pics.append({'id': img_instance.id,
-                     'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
+                     'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
                      'has_saved': True})
     soup = BeautifulSoup(text, 'html.parser')
     title = get_title(soup)
@@ -519,6 +521,8 @@ def scrap(**kwargs):
     url = kwargs.get('url')
     print('pass url')
     code = kwargs.get('code')
+    lpn = kwargs.get('lpn')
+
     print('pass code')
     # try:
     print('here')
@@ -544,6 +548,8 @@ def scrap(**kwargs):
         # response = requests.get(url)
         # print()
         print('url is', url)
+        logger.info(f'**************This is a debug message url: {url}')
+
         urls, text, c_r = get_image_urls(url)
         print('after get image urls')
         if not code:
@@ -554,12 +560,12 @@ def scrap(**kwargs):
         # upc_code = None
         # ean_code = None
         # fnksu_code = None
-        # lpn_code = None
+        lpn_code = lpn or None
         pics = []
         for u in urls:
             img_instance = download_image(u)
             pics.append({'id': img_instance.id,
-                         'url': urljoin('http://35.209.176.71/', 'inventory' + img_instance.local_image.url),
+                         'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
                          'has_saved': True})
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)
@@ -585,7 +591,7 @@ def scrap(**kwargs):
                 # 'upc_code': upc_code,
                 # 'ean_code': ean_code,
                 # 'fnksu_code': fnksu_code,
-                # 'lpn_code': lpn_code,
+                'lpn_code': lpn_code,
                 'pics': pics,
                 'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                 'customize_color': customize_color,
