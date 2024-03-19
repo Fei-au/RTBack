@@ -39,7 +39,7 @@ def getItemInfoByCode(request, code):
     try:
         items = None
         print('code', code)
-
+        logger.info('item code' + code)
         if code.startswith('B'):
             items = Item.objects.filter(b_code=code)
         # elif code.startswith('X'):
@@ -120,6 +120,7 @@ def scrapInfoByBOCode(request, **kwargs):
     result = scrap(url=url, code=code, lpn=lpn)
     print('result', result)
     if result['status'] == 1:
+        logger.info(result['data'])
         return JsonResponse({'status': 'success', 'data': result['data']})
     elif result['status'] == 0:
         return JsonResponse({'status': 'not found', 'message': result['message']})
