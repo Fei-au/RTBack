@@ -15,6 +15,7 @@ from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
 from utils.file import get_extension_from_url
 from urllib.parse import urljoin
+from .serializers import ImageSerializer
 import re
 import time
 import logging
@@ -257,12 +258,13 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
     # ean_code = None
     # fnksu_code = None
     # lpn_code = None
-    pics = []
+    images = []
     for u in urls:
         img_instance = download_image(u)
-        pics.append({'id': img_instance.id,
-                     'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
-                     'has_saved': True})
+        serializer = ImageSerializer(img_instance)
+        normal_image_dict = dict(serializer.data)
+        normal_image_dict.has_saved = True
+        images.append(normal_image_dict)
     soup = BeautifulSoup(text, 'html.parser')
     title = get_title(soup)
     description = title
@@ -288,7 +290,7 @@ def scrpByHtml(urls, text, c_r, upc_ean_code):
             # 'ean_code': ean_code,
             # 'fnksu_code': fnksu_code,
             # 'lpn_code': lpn_code,
-            'pics': pics,
+            'images': images,
             'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
             'customize_color': customize_color,
             'msrp_price': price,
@@ -560,12 +562,13 @@ def scrap(**kwargs):
         # ean_code = None
         # fnksu_code = None
         lpn_code = lpn or None
-        pics = []
+        images = []
         for u in urls:
             img_instance = download_image(u)
-            pics.append({'id': img_instance.id,
-                         'url': urljoin('http://' + MEDIA_DOMAIN, img_instance.local_image.url),
-                         'has_saved': True})
+            serializer = ImageSerializer(img_instance)
+            normal_image_dict = dict(serializer.data)
+            normal_image_dict.has_saved = True
+            images.append(normal_image_dict)
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)
         description = title
@@ -591,7 +594,7 @@ def scrap(**kwargs):
                 # 'ean_code': ean_code,
                 # 'fnksu_code': fnksu_code,
                 'lpn_code': lpn_code,
-                'pics': pics,
+                'images': images,
                 'category': {'id': str(cls.id), 'name': cls.name} if cls else None,
                 'customize_color': customize_color,
                 'msrp_price': price,

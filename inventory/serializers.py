@@ -10,10 +10,10 @@ MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
 
 
 class ItemStatusSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
+    # id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     class Meta:
         model = Item_Status
-        fields = ['id', 'status']
+        fields = '__all__'
 
 class AuctionProductListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,7 +23,7 @@ class ImageSerializer(serializers.ModelSerializer):
     full_image_url=serializers.SerializerMethodField()
     class Meta:
         model = Image
-        fields = ['id', 'local_image', 'full_image_url']
+        fields = ['id', 'local_image', 'full_image_url', 'external_url', 'item']
         # fields = '__all__'
     def get_full_image_url(self, obj):
         request = self.context.get('request')
@@ -41,11 +41,12 @@ class ItemSerializer(serializers.ModelSerializer):
     # id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     # status = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     images = ImageSerializer(many=True, read_only=True)  # Assuming 'images' is the related_name
-    add_staff = ProfileSerializer(read_only=True)  # Use the related name
-    status = ItemStatusSerializer(read_only=True)
-    status_id = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status', write_only=True)
-    category_id = serializers.CharField(source='category.id', read_only=True)
-    add_staff_id = serializers.PrimaryKeyRelatedField(queryset=Profile.objects.all(), source='add_staff', write_only=True)
+    profile = ProfileSerializer(source='add_staff', read_only=True)
+    # add_staff = ProfileSerializer(read_only=True)  # Use the related name
+    # status = ItemStatusSerializer(read_only=True)
+    # status_id = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status', write_only=True)
+    # category_id = serializers.CharField(source='category.id', read_only=True)
+    # add_staff_id = serializers.PrimaryKeyRelatedField(queryset=Profile.objects.all(), source='add_staff', write_only=True)
     # category = serializers.PrimaryKeyRelatedField(queryset=Item_Category.objects.all(), source='category_id')
     # status = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status_id')
     class Meta:
@@ -56,7 +57,8 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class ItemCategorySerializer(serializers.ModelSerializer):
-    id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
+    # id_string = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
+
     class Meta:
         model = Item_Category
         fields = '__all__'
