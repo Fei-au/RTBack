@@ -39,7 +39,7 @@ def getItemInfoByCode(request, code):
     try:
         items = None
         print('code', code)
-
+        logger.info('item code' + code)
         if code.startswith('B'):
             items = Item.objects.filter(b_code=code)
         # elif code.startswith('X'):
@@ -59,19 +59,20 @@ def getItemInfoByCode(request, code):
             print('queryset result len is 0')
             if code.startswith('B'):
                 print('code start with B and scrap on web')
-                return scrapInfoByBOCode(request, code)
+                return scrapInfoByBOCode(request, code=code)
             elif code.isdigit():
                 print('code is digit and scrap on web')
                 return scrapInfoByNumCode(request, code=code)
             elif code.startswith('LPN'):
                 items = Purchase_List.objects.filter(lpn_code=code)
                 print('LPN items value', items)
+                print('len(items)', len(items))
                 if len(items) == 0:
                     return JsonResponse({'status': 'not found',
                                          'message': 'Code ' + code + ' not found in database, please scan the digital code of this product.'})
                 else:
                     print('find lpn in purchase list')
-                    return scrapInfoByBOCode(request, items[0].b_code, code)
+                    return scrapInfoByBOCode(request, code=items[0].b_code, lpn=code)
             # return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
         else:
             serialize_item = ItemSerializer(items[0])
@@ -113,11 +114,13 @@ def getItemInfoByCode(request, code):
 
 
 def scrapInfoByBOCode(request, **kwargs):
-
+    code = kwargs.get('code')
+    lpn = kwargs.get('lpn') or None
     url = getUrl(code)
     result = scrap(url=url, code=code, lpn=lpn)
     print('result', result)
     if result['status'] == 1:
+        logger.info(result['data'])
         return JsonResponse({'status': 'success', 'data': result['data']})
     elif result['status'] == 0:
         return JsonResponse({'status': 'not found', 'message': result['message']})
