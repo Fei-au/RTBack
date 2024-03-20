@@ -94,7 +94,7 @@ class Item(models.Model):
     add_staff = models.ForeignKey('staff.Profile', on_delete=models.DO_NOTHING, blank=True, null=True) # Staff who add the item
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, blank=True, null=True)
     stock_status = models.CharField(max_length=20, choices=StockStatus.choices,default=StockStatus.IN_STOCK,blank=True,null=True)
-    url = models.URLField(max_length=200, blank=True, null=True)
+    url = models.URLField(max_length=1000, blank=True, null=True)
     location = models.CharField(max_length=10, blank=True,null=True)
         # use one field location instead of two fields
     # shelf = models.IntegerField(blank=True,null=True) # Shelf number of item location, eg: 1, 2, 3...

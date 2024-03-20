@@ -23,7 +23,7 @@ class ImageSerializer(serializers.ModelSerializer):
     full_image_url=serializers.SerializerMethodField()
     class Meta:
         model = Image
-        fields = ['id', 'local_image', 'full_image_url', 'external_url', 'item']
+        fields = ['id', 'full_image_url', 'external_url', 'item']
         # fields = '__all__'
     def get_full_image_url(self, obj):
         request = self.context.get('request')
@@ -41,7 +41,7 @@ class ItemSerializer(serializers.ModelSerializer):
     # id = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     # status = serializers.CharField(read_only=True)  # Ensure ID is treated as a string
     images = ImageSerializer(many=True, read_only=True)  # Assuming 'images' is the related_name
-    profile = ProfileSerializer(source='add_staff', read_only=True)
+    add_staff_profile = ProfileSerializer(source='add_staff', read_only=True)
     # add_staff = ProfileSerializer(read_only=True)  # Use the related name
     # status = ItemStatusSerializer(read_only=True)
     # status_id = serializers.PrimaryKeyRelatedField(queryset=Item_Status.objects.all(), source='status', write_only=True)
