@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -46,7 +44,10 @@ def create_driver():
     logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
     logger.info(f'**************This is a debug message MS_WEBDRIVER_PATH: {MS_WEBDRIVER_PATH}')
 
-    options = Options()
+    if USE_MS:
+        options = webdriver.EdgeOptions()
+    else:
+        options = webdriver.ChromeOptions()
     if IS_DEVELOPMENT:
         # local setting
         options.add_argument('--disable-gpu')  # applicable to windows os only
@@ -68,10 +69,10 @@ def create_driver():
 
     if not USE_MS:
         # Initialize chrome WebDriver with options
-        service = Service(executable_path=WEBDRIVER_PATH)
+        service = webdriver.ChromeService(executable_path=WEBDRIVER_PATH)
         driver = webdriver.Chrome(service=service, options=options)
     else:
-        service = Service(executable_path=MS_WEBDRIVER_PATH)
+        service = webdriver.EdgeService(executable_path=MS_WEBDRIVER_PATH)
         print('here at ms driver')
         driver = webdriver.Edge(options=options)
     return driver
