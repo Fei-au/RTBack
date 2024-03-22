@@ -55,6 +55,7 @@ def getItemInfoByCode(request, code):
                 {'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
         print('after search code in item table')
         print('items value', items)
+        logger.info(f'items value, {items}')
         if len(items) == 0:
             print('queryset result len is 0')
             if code.startswith('B'):
@@ -65,8 +66,7 @@ def getItemInfoByCode(request, code):
                 return scrapInfoByNumCode(request, code=code)
             elif code.startswith('LPN'):
                 items = Purchase_List.objects.filter(lpn_code=code)
-                print('LPN items value', items)
-                print('len(items)', len(items))
+                logger.info(f'LPN items value: {items}')
                 if len(items) == 0:
                     return JsonResponse({'status': 'not found',
                                          'message': 'Code ' + code + ' not found in database, please scan the digital code of this product.'})
@@ -117,7 +117,7 @@ def scrapInfoByBOCode(request, **kwargs):
     code = kwargs.get('code')
     lpn = kwargs.get('lpn') or None
     result = scrap(code=code, lpn=lpn)
-    print('result', result)
+    logger.info(f'result: {result}')
     if result['status'] == 1:
         logger.info(result['data'])
         return JsonResponse({'status': 'success', 'data': result['data']})
@@ -134,7 +134,7 @@ def scrapInfoByNumCode(request, code):
     # result = scrap(url=url, code=code)
     # print('result', result)
     result = scrapInfoByNumCodeService(code, 'https://www.amazon.ca/')
-    print(result)
+    logger.info(f'result: {result}')
     if result['status'] == 1:
         return JsonResponse({'status': 'success', 'data': result['data']})
     elif result['status'] == 0:
@@ -148,9 +148,9 @@ def scrapInfoByNumCode(request, code):
 def scrapInfoByURL(request):
     try:
         url = request.GET.get('url', '')
-        print('url', url)
+        logger.info(f'url: {url}')
         result = scrap(url=url)
-        print('result', result)
+        logger.info(f'result: {result}')
         if result['status'] == 1:
             return JsonResponse({'status': 'success', 'data': result['data']})
         elif result['status'] == 0:
