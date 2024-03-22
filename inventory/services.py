@@ -55,7 +55,7 @@ def create_driver():
     else:
         # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         print()
-    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
     # options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 
 
