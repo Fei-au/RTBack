@@ -36,14 +36,15 @@ logger = logging.getLogger('django')
 
 print('IS_DEVELOPMENT', IS_DEVELOPMENT)
 print('WEBDRIVER_PATH', WEBDRIVER_PATH)
+print('MS_WEBDRIVER_PATH', MS_WEBDRIVER_PATH)
+print('USE_MS', USE_MS)
 def create_driver():
     # Set the path to the Edge WebDriver executable
 
     logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
+    logger.info(f'**************This is a debug message USE_MS: {USE_MS}')
     logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
     logger.info(f'**************This is a debug message MS_WEBDRIVER_PATH: {MS_WEBDRIVER_PATH}')
-
-
 
     options = Options()
     if IS_DEVELOPMENT:
