@@ -276,7 +276,7 @@ class AddNewItemView(APIView):
                     if imgs:
                         for img in imgs:
                             exts = get_extension(img.name)
-                            new_img = Image(local_image=img, item=itm_instance.id)
+                            new_img = Image(local_image=img, item_id=itm_instance.id)
                             new_img.local_image.name = str(itm_instance.id) + '_' + str(i) + exts
                             i = i + 1
                             new_img.save()
