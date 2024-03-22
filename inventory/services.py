@@ -46,9 +46,9 @@ def create_driver():
 
     if USE_MS:
         options = webdriver.EdgeOptions()
-        options.binary_location = '/usr/bin/microsoft-edge'
     else:
         options = webdriver.ChromeOptions()
+
     if IS_DEVELOPMENT:
         # local setting
         options.add_argument('--disable-gpu')  # applicable to windows os only
