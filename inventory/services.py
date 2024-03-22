@@ -52,17 +52,18 @@ def create_driver():
         options.add_argument('--disable-gpu')  # applicable to windows os only
         options.binary_location = BINARY_LOCATION
     else:
-        options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
-    # options.binary_location = '/usr/bin/google-chrome'
-    options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
-    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-    # options.add_argument('start-maximized')  #
+        # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
+        print()
+    # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
+    # options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+
 
     # Set chrome WebDriver options
 
-    options.add_argument('disable-infobars')
-    options.add_argument('--disable-extensions')
-    options.add_argument('--remote-debugging-port=9222')
+    # options.add_argument('disable-infobars')
+    # options.add_argument('--disable-extensions')
+
+    # options.add_argument('--remote-debugging-port=9222')
 
     if not USE_MS:
         # Initialize chrome WebDriver with options
