@@ -67,10 +67,10 @@ def create_driver():
     if not USE_MS:
         # Initialize chrome WebDriver with options
         service = Service(executable_path=WEBDRIVER_PATH)
-        driver = webdriver.Chrome(options=options, service=service)
+        driver = webdriver.Chrome(options=options, executable_path=WEBDRIVER_PATH)
     else:
         service = Service(executable_path=MS_WEBDRIVER_PATH)
-        driver = webdriver.Edge(options=options, service=service)
+        driver = webdriver.Edge(options=options, executable_path=MS_WEBDRIVER_PATH)
     return driver
 
 
