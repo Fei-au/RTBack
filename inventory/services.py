@@ -555,18 +555,27 @@ def scrap(**kwargs):
     try:
         soup = BeautifulSoup(text, 'html.parser')
         title = get_title(soup)
+        logger.info(f'title is: {title}')
         description = title
         # set description same as title
         # description = get_description(soup)
         # if not description:
         #     description = title
         cls = get_clses(soup)
+        logger.info(f'cls is: {cls}')
+
         customize_color = get_color(soup)
+        logger.info(f'color is: {customize_color}')
+
         price = get_price(soup)
+        logger.info(f'price is: {price}')
+
         bid_start_price = None
+        logger.info(f'bid_start_price is: {bid_start_price}')
+
         if price:
             bid_start_price = get_bid_start_price(price)
-        logger.debug('before return scrap')
+        logger.info('before return scrap')
         return {
             'status': 1,
             'data': {
