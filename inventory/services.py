@@ -200,6 +200,7 @@ def scrapInfoByNumCodeService(code, amz_url):
             # print('here error timeout or no such element')
             if amz_url.find('.ca') != -1:
                 logger.info('Not found in .ca')
+                driver.quit()
                 return scrapInfoByNumCodeService(code, 'https://www.amazon.com/')
             else:
                 return {'status': 0, 'message': 'Code not found in amazon.ca and amazon.com'}
