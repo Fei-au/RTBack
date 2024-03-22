@@ -74,7 +74,7 @@ def create_driver():
     else:
         service = webdriver.EdgeService(executable_path=MS_WEBDRIVER_PATH)
         print('here at ms driver')
-        driver = webdriver.Edge(options=options)
+        driver = webdriver.Edge(options=options, service=service)
     return driver
 
 
