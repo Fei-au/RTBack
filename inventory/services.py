@@ -174,15 +174,16 @@ def scrapInfoByNumCodeService(code, amz_url):
         return {'status': 0, 'message': 'Code not found in amazon.ca and amazon.com'}
     i = 0
     # loop for first 4 result to find the result title and the next result image
+    logger.info('At search result page')
     while i <= 3:
         try:
-            print('here we in the result page and get the 0 element')
+            logger.info('here we in the result page and get the 0 element')
             txt = '//*[@data-cel-widget="search_result_{}"]'
             result_title_div = driver.find_element(By.XPATH, txt.format(i))
             title = result_title_div.find_element(By.CSS_SELECTOR, '.a-size-medium-plus')
-            print('get the title word')
+            logger.info('get the title word')
             if title.text != 'Results':
-                print('titile word is not Results')
+                logger.info('titile word is not Results')
                 raise TimeoutException('Not find the product')
             first_result = driver.find_element(By.XPATH, txt.format(i + 1))
             logger.debug('get the first result and start go in')
@@ -198,6 +199,7 @@ def scrapInfoByNumCodeService(code, amz_url):
                 continue
             # print('here error timeout or no such element')
             if amz_url.find('.ca') != -1:
+                logger.info('Not found in .ca')
                 return scrapInfoByNumCodeService(driver, code, 'https://www.amazon.com/')
             else:
                 return {'status': 0, 'message': 'Code not found in amazon.ca and amazon.com'}
@@ -212,6 +214,8 @@ def scrapInfoByNumCodeService(code, amz_url):
         return {'status': 0, 'message': 'Code not found in amazon.ca and amazon.com'}
 
     # At product page, start scrapping
+    middle_time = time.time()
+    logger.info(f'arrive number code product page: {middle_time}')
     return scrap(driver=driver, upc_ean_code=code)
     # get first three imgs
     # image_urls = []
