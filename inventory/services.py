@@ -70,6 +70,7 @@ def create_driver():
         driver = webdriver.Chrome(options=options, executable_path=WEBDRIVER_PATH)
     else:
         service = Service(executable_path=MS_WEBDRIVER_PATH)
+        print('here at ms driver')
         driver = webdriver.Edge(options=options, executable_path=MS_WEBDRIVER_PATH)
     return driver
 
