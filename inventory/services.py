@@ -52,7 +52,6 @@ def create_driver():
     if IS_DEVELOPMENT:
         # local setting
         options.add_argument('--disable-gpu')  # applicable to windows os only
-        options.binary_location = BINARY_LOCATION
     else:
         # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         print()
