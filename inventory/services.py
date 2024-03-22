@@ -545,8 +545,8 @@ def scrap(**kwargs):
     c_r = driver.current_url
     logger.info(f'scrap url: {url}')
     logger.info(f'scrap current url: {c_r}')
-    # urls = get_image_urls(driver=driver, url=(url or c_r))
-    urls = []
+    urls = get_image_urls(driver=driver, url=(url or c_r))
+    # urls = []
     logger.debug('after get image urls')
     if not code:
         code = getCodeByUrl(c_r)
