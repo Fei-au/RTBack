@@ -46,7 +46,7 @@ def create_driver():
 
     if USE_MS:
         options = webdriver.EdgeOptions()
-        options.binary_location = MS_WEBDRIVER_PATH
+        options.binary_location = '/usr/bin/microsoft-edge'
     else:
         options = webdriver.ChromeOptions()
     if IS_DEVELOPMENT:
@@ -63,7 +63,7 @@ def create_driver():
     # Set chrome WebDriver options
 
     # options.add_argument('disable-infobars')
-    # options.add_argument('--disable-extensions')
+    # options.add_argument('--disable-extensions')export DJANGO_ENV=production
 
     # options.add_argument('--remote-debugging-port=9222')
 
