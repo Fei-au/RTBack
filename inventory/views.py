@@ -203,9 +203,7 @@ class AddNewItemView(APIView):
             logger.info(f'item string is: {item_string}')
             is_new_string = request.data.get('is_new')
             logger.info(f'is_new_string is: {is_new_string}')
-            print('type is_new', type(is_new_string))
             is_new = json.loads(is_new_string)
-            print('type is_new', type(is_new))
             itm = json.loads(item_string)
             # print('here', request.FILES.get('image').uri)
             if itm:
@@ -255,7 +253,7 @@ class AddNewItemView(APIView):
                                 continue
                             # scrapped image but haven't set foreign key to any item
                             if not saved_img.item:
-                                print('here not')
+                                logger.info('Not saved image')
                                 old_file = saved_img.local_image.path
                                 exts = get_extension(saved_img.local_image.name)
                                 new_file_relative = str(itm_instance.id) + '_' + str(i) + exts
@@ -268,7 +266,7 @@ class AddNewItemView(APIView):
                                 saved_img.item_id = itm_instance.id
                                 saved_img.save()
                             else:
-                                print('here')
+                                logger.info('Saved image')
                                 new_img = saved_img
                                 # copy the new instance
                                 new_img.pk = None
@@ -284,11 +282,11 @@ class AddNewItemView(APIView):
                             new_img.save()
                     return Response(serializer_itm.data, status=201)
                 else:
-                    print('err1', serializer_itm.errors)
-                    print('err2', serializer_stf.errors)
+                    logger.info(f'err1: {serializer_itm.errors}')
+                    logger.info(f'err2 {serializer_stf.errors}')
                     raise ValidationError()
         except Exception as err:
-            print('err', err)
+            logger.info(f'err: {err}')
             raise APIException()
 
 
