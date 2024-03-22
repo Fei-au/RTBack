@@ -200,7 +200,9 @@ class AddNewItemView(APIView):
             # print('here', request.FILES.get('image').file)
 
             item_string = request.data.get('item')
+            logger.info(f'item string is: {item_string}')
             is_new_string = request.data.get('is_new')
+            logger.info(f'is_new_string is: {is_new_string}')
             print('type is_new', type(is_new_string))
             is_new = json.loads(is_new_string)
             print('type is_new', type(is_new))
