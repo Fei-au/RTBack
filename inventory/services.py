@@ -588,7 +588,7 @@ def scrap(**kwargs):
                 # 'fnksu_code': fnksu_code,
                 'lpn_code': lpn_code,
                 'images': images,
-                'category': cls.id,
+                'category': None if cls is None else cls.id,
                 'customize_color': customize_color,
                 'msrp_price': price,
                 'bid_start_price': bid_start_price,
