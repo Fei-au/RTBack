@@ -26,9 +26,10 @@ load_dotenv()
 
 IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 WEBDRIVER_PATH = os.getenv('WEBDRIVER_PATH')
+MS_WEBDRIVER_PATH = os.getenv('MS_WEBDRIVER_PATH')
 BINARY_LOCATION = os.getenv('BINARY_LOCATION')
 MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
-
+USE_MS = os.getenv('USE_MS') == 'TRUE'
 
 logger = logging.getLogger('django')
 
@@ -40,6 +41,8 @@ def create_driver():
 
     logger.info(f'**************This is a debug message IS_DEVELOPMENT: {IS_DEVELOPMENT}')
     logger.info(f'**************This is a debug message WEBDRIVER_PATH: {WEBDRIVER_PATH}')
+    logger.info(f'**************This is a debug message MS_WEBDRIVER_PATH: {MS_WEBDRIVER_PATH}')
+
 
 
     options = Options()
@@ -54,16 +57,19 @@ def create_driver():
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
     # options.add_argument('start-maximized')  #
 
-    webdriver_path = WEBDRIVER_PATH
     # Set chrome WebDriver options
-    service = Service(executable_path=webdriver_path)
 
     options.add_argument('disable-infobars')
     options.add_argument('--disable-extensions')
     options.add_argument('--remote-debugging-port=9222')
 
-    # Initialize chrome WebDriver with options
-    driver = webdriver.Chrome(options=options)
+    if not USE_MS:
+        # Initialize chrome WebDriver with options
+        service = Service(executable_path=WEBDRIVER_PATH)
+        driver = webdriver.Chrome(options=options, service=service)
+    else:
+        service = Service(executable_path=MS_WEBDRIVER_PATH)
+        driver = webdriver.Edge(options=options, service=service)
     return driver
 
 
