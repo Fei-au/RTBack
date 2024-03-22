@@ -373,7 +373,7 @@ def getItems(request):
     try:
         page_size = int(request.GET.get('page_size'))
         page_number = int(request.GET.get('page_number'))
-        items = Item.objects.order_by('id').prefetch_related('images').select_related('add_staff').select_related(
+        items = Item.objects.order_by('-add_date').prefetch_related('images').select_related('add_staff').select_related(
             'status')
         paginator = Paginator(items, per_page=page_size)
         page_obj = paginator.get_page(page_number)

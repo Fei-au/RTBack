@@ -1,6 +1,7 @@
 import datetime
 from django.db import models
-from django.utils  import timezone
+from django.utils import timezone
+from django.conf import settings
 import os
 
 # Create your models here.
@@ -117,8 +118,9 @@ class Image(models.Model):
         return f"Image for {self.item.id}"
     def delete(self, *args, **kwargs):
         if self.local_image:
-            if os.path.isfile(self.local_image.path):
-                os.remove(self.local_image.path)
+            file_path = os.path.join(settings.MEDIA_ROOT, self.local_image)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
         super().delete(*args, **kwargs)
 
 
