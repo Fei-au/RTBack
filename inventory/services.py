@@ -52,6 +52,7 @@ def create_driver():
         options.add_argument('--disable-gpu')  # applicable to windows os only
         options.binary_location = BINARY_LOCATION
     else:
+        options.binary_location = MS_WEBDRIVER_PATH
         # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         print()
     # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
