@@ -56,7 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'inventory.middleware.RequestResponseLogMiddleware'
+    'inventory.middleware.RequestResponseLogMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
