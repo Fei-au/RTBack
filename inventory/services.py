@@ -46,6 +46,7 @@ def create_driver():
 
     if USE_MS:
         options = webdriver.EdgeOptions()
+        options.binary_location = MS_WEBDRIVER_PATH
     else:
         options = webdriver.ChromeOptions()
     if IS_DEVELOPMENT:
@@ -53,7 +54,6 @@ def create_driver():
         options.add_argument('--disable-gpu')  # applicable to windows os only
         options.binary_location = BINARY_LOCATION
     else:
-        # options.binary_location = MS_WEBDRIVER_PATH
         # options.add_argument('--no-sandbox')  # Bypass OS security model (necessary on some platforms, e.g., Linux)
         print()
     # options.add_argument('--headless')  # Run Chrome in headless mode (without GUI)
@@ -74,7 +74,7 @@ def create_driver():
     else:
         service = webdriver.EdgeService(executable_path=MS_WEBDRIVER_PATH)
         print('here at ms driver')
-        driver = webdriver.Edge(options=options, service=service)
+        driver = webdriver.Edge(options=options)
     return driver
 
 
