@@ -4,6 +4,7 @@ import zipfile
 import os
 import dotenv
 from utils.file import get_export_dir
+from utils.dt import get_date_prefix
 
 dotenv.load_dotenv()
 
@@ -29,7 +30,7 @@ def create_zip(f_list):
         for x in f_list:
             p = os.path.basename(x)
             img_zip.write(x, arcname=p)
-    http_path = f'http://{MEDIA_DOMAIN}/export/{filename}{zip_extension}'
+    http_path = f'http://{MEDIA_DOMAIN}/export/{get_date_prefix()}/{filename}{zip_extension}'
     return http_path
 
 
