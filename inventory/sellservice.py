@@ -6,6 +6,9 @@ import dotenv
 from utils.file import get_export_dir
 
 dotenv.load_dotenv()
+
+MEDIA_DOMAIN = os.getenv('MEDIA_DOMAIN')
+
 def exportAuctionSummary(f):
     df = pd.read_csv(f)
     sum_df = df.loc[:, ['invnum', 'sequence', 'fullname', 'city', 'countryname', 'phone']]
@@ -26,7 +29,7 @@ def create_zip(f_list):
         for x in f_list:
             p = os.path.basename(x)
             img_zip.write(x, arcname=p)
-    http_path = f'http://{export_dir}/{filename}{zip_extension}'
+    http_path = f'http://{MEDIA_DOMAIN}/export/{filename}{zip_extension}'
     return http_path
 
 
