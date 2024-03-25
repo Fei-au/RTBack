@@ -556,7 +556,7 @@ def uploadSoldProducts(request):
         # print('here before return')
         return HttpResponse(full_path)
     except Exception as e:
-        print('e', e)
+        logger.error(e)
         return HttpResponseServerError()
     finally:
         # if os.path.exists(full_path):
