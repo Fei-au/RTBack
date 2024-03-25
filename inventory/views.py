@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.db.models import Max
 from .models import Item, Item_Status, Item_Category, Image, Purchase_List, Auction_Product_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
+from .sellservice import exportAuctionSummary, create_zip
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer, AuctionProductListSerializer
 from staff.serializers import ProfileSerializer
@@ -539,4 +540,30 @@ def getLastItems(request, staff_id):
 
     except Exception as e:
         print('e', e)
+
+
+@api_view(['POST'])
+def uploadSoldProducts(request):
+    files = request.FILES.getlist('file')
+    sum_list = []
+    try:
+        for f in files:
+            sum_list.append(exportAuctionSummary(f))
+        full_path = create_zip(sum_list)
+        print('full_path', full_path)
+        # response = HttpResponse(open(full_path, 'rb'), content_type='application/zip')
+        # response['Content-Disposition'] = f'attachment; filename={os.path.basename(full_path)}'
+        # print('here before return')
+        return HttpResponse(full_path)
+    except Exception as e:
+        print('e', e)
+        return HttpResponseServerError()
+    finally:
+        # if os.path.exists(full_path):
+        #     os.remove(full_path)
+        for f in sum_list:
+            if os.path.exists(f):
+                os.remove(f)
+
+
 

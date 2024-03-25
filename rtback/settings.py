@@ -13,11 +13,17 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 
 load_dotenv()
 
 IS_DEVELOPMENT = os.getenv('IS_DEVELOPMENT') == 'TRUE'
 
+SQL_HOST=os.getenv('SQL_HOST')
+SQL_PORT=os.getenv('SQL_PORT')
+SQL_USER=os.getenv('SQL_USER')
+SQL_PASSWORD=os.getenv('SQL_PASSWORD')
+SQL_DATABASE_NAME=os.getenv('SQL_DATABASE_NAME')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,7 +45,9 @@ SECRET_KEY = 'django-insecure-l&dw^_-lz1o*+akmdgo4k09=6ko010+q(dqfi+c_m3c$hqe%3#
 DEBUG = True if IS_DEVELOPMENT else False
 
 ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.168.2.144', '35.209.176.71', ' 70.31.50.163', '34.130.51.136']
-
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'responsetype',
+]
 
 # Application definition
 
@@ -103,12 +111,12 @@ WSGI_APPLICATION = 'rtback.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        "NAME": "ruito",
-        "USER": "root",
-        "PASSWORD": "root",
-        "HOST": "34.29.14.234",
+        "NAME": SQL_DATABASE_NAME,
+        "USER": SQL_USER,
+        "PASSWORD": SQL_PASSWORD,
+        "HOST": SQL_HOST,
         # "HOST": "localhost",
-        "PORT": "3306",
+        "PORT": SQL_PORT,
     }
 }
 

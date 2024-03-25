@@ -46,6 +46,8 @@ urlpatterns = [
                   path("delete_image/<int:pk>", views.deleteImage, name="delete_image"),
                   path("get_next_lot_number/<int:auction>", views.getNextLotNumber, name="get_next_lot_number"),
                   path("get_available_sequences/<int:auction>", views.getAvailableSequences, name="get_available_sequences"),
+                  path("upload_sold_products", views.uploadSoldProducts, name="upload_sold_products"),
+
 
                   # Simple requests
               ]
