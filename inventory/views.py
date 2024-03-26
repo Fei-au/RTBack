@@ -208,9 +208,9 @@ class AddNewItemView(APIView):
             itm = json.loads(item_string)
             # print('here', request.FILES.get('image').uri)
             if itm:
-                stf = Profile.objects.get(user_id=itm['add_staff'])
-                logger.debug(type(itm['add_staff']))
-                logger.debug(itm['status'])
+                logger.info(f'add staff: {itm["add_staff"]}')
+                stf = Profile.objects.get(user_id=itm['add_user'])
+                print('stf', stf)
                 # Set staff last issued number + 1 to new added item number
                 data = itm.copy()
                 new_last_issued_number = None
