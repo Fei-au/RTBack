@@ -6,8 +6,10 @@ from rest_framework.decorators import api_view
 from .serializers import UserSerializer, ProfileSerializer
 from .models import Profile
 from django.contrib.auth import login, authenticate
+import logging
 
-# Create your views here.
+
+logger = logging.getLogger('django')
 @csrf_exempt
 @api_view(['POST'])
 def creatUser(request):
@@ -17,8 +19,8 @@ def creatUser(request):
     is_staff = request.POST.get('is_staff')
     is_superuser = request.POST.get('is_superuser')
     if not User.objects.filter(username=username).exists():
-        print('creating user...')
         u = User.objects.create_user(username=username, email=email, password=password, is_active=True, is_superuser=is_superuser)
+        logger.info('creating user success')
         if is_staff:
             item_start = request.POST.get('item_start')
             item_end = request.POST.get('item_end')
@@ -37,9 +39,8 @@ def creatUser(request):
 @api_view(['POST'])
 def creatStaff(request, user, data):
     staff = Profile(user=user, item_start=data['item_start'], item_end=data['item_end'],item_version=data['item_version'],last_issued_number=data['last_issued_number'],)
-    print('staff', staff)
+    logger.info(f'create staff success')
     staff.save()
-    print('here')
     serializer_user = UserSerializer(user)
     serializer_staff = ProfileSerializer(staff)
     return Response({'user': serializer_user.data, 'staff': serializer_staff.data}, status=201)
@@ -49,17 +50,20 @@ def creatStaff(request, user, data):
 @api_view(['POST'])
 def loginUser(request):
     json_data = request.data
-    user = authenticate(request, username=json_data.get('username'), password=json_data.get('password'))
+    username = json_data.get('username')
+    password = json_data.get('password')
+    user = authenticate(request, username=username, password=password)
     if user is not None:
         staff = None
         if user.is_staff:
             staff = Profile.objects.get(user_id=user.id)
+            staff_serializer = ProfileSerializer(instance=staff)
         # login(request, user)
-            return Response({'status': 'success', 'user_id': user.id, 'staff_id': staff.id}, status=200)
+            return Response({'status': 'success', 'user_id': user.id, 'staff': staff_serializer.data}, status=200)
         else:
             return Response({'status': 'success', 'user_id': user.id}, status=200)
     else:
-        print('here')
+        logger.info(f'auth error {username}')
         return Response('login failed.', status=403)
 
 @csrf_exempt
@@ -74,3 +78,13 @@ def loginAdmin(request):
             return Response('login failed. Please login admin user.', status=403)
     else:
         return Response('login failed. User does not exist.', status=403)
+
+
+@api_view(['GET'])
+def getNextItemNumber(request, pk):
+    try:
+        staff = Profile.objects.get(pk=pk)
+        return Response(staff.last_issued_number + 1)
+    except ModuleNotFoundError as e:
+        return Response(0)
+

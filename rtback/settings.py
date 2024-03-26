@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from corsheaders.defaults import default_headers
+from logging.handlers import TimedRotatingFileHandler
 
 load_dotenv()
 
@@ -178,8 +179,11 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             "filename": "django.log",
+            'when': 'W0',  # Rotate logs every Monday
+            'interval': 1,  # Every 1 week
+            'backupCount': 2,  # Keep only the last 2 weeks of logs
             'formatter': 'detailed',
         },
     },

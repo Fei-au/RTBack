@@ -566,4 +566,3 @@ def uploadSoldProducts(request):
                 os.remove(f)
 
 
-
