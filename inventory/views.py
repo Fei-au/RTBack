@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.db.models import Max
 from .models import Item, Item_Status, Item_Category, Image, Purchase_List, Auction_Product_List
 from .services import scrap, download_image, getUrl, scrapInfoByNumCodeService
+from .sellservice import exportAuctionSummary, create_zip
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import ItemStatusSerializer, ItemSerializer, ItemCategorySerializer, AuctionProductListSerializer
 from staff.serializers import ProfileSerializer
@@ -39,65 +40,66 @@ def getItemInfoByCode(request, code):
     try:
         items = None
         print('code', code)
-
+        logger.info('item code' + code)
         if code.startswith('B'):
-            items = Item.objects.filter(b_code=code)
+            items = Item.objects.filter(b_code=code).prefetch_related('images')
         # elif code.startswith('X'):
         #     items = Item.objects.filter(fnsku_code=code)
         # elif code.startswith('LPN'):
         #     items = Item.objects.filter(lpn_code=code)
         elif code.isdigit():
-            items = Item.objects.filter(upc_ean_code=code)
+            items = Item.objects.filter(upc_ean_code=code).prefetch_related('images')
         elif code.startswith('LPN'):
-            items = Item.objects.filter(lpn_code=code)
+            items = Item.objects.filter(lpn_code=code).prefetch_related('images')
         else:
             return JsonResponse(
                 {'status': 'not found', 'message': 'Code formate like ' + code + ' is not recongnized.'})
         print('after search code in item table')
         print('items value', items)
+        logger.info(f'items value, {items}')
         if len(items) == 0:
             print('queryset result len is 0')
             if code.startswith('B'):
                 print('code start with B and scrap on web')
-                return scrapInfoByBOCode(request, code)
+                return scrapInfoByBOCode(request, code=code)
             elif code.isdigit():
                 print('code is digit and scrap on web')
                 return scrapInfoByNumCode(request, code=code)
             elif code.startswith('LPN'):
                 items = Purchase_List.objects.filter(lpn_code=code)
-                print('LPN items value', items)
+                logger.info(f'LPN items value: {items}')
                 if len(items) == 0:
                     return JsonResponse({'status': 'not found',
                                          'message': 'Code ' + code + ' not found in database, please scan the digital code of this product.'})
                 else:
                     print('find lpn in purchase list')
-                    return scrapInfoByBOCode(request, items[0].b_code, code)
+                    return scrapInfoByBOCode(request, code=items[0].b_code, lpn=code)
             # return JsonResponse({'status': 'not found', 'message': 'Code ' + code + ' not found in database.'})
         else:
             serialize_item = ItemSerializer(items[0])
             # return Response({'status': "success", 'data': serialize_item.data})
-            d = serialize_item.data
-            print('*****', d)
-            d_cate = Item_Category.objects.get(id=int(d['category_id']))
-            d['category'] = {
-                'id': str(d_cate.id),
-                'name': d_cate.name,
-            }
-            d['price'] = d['msrp_price']
-            print('d, id', d['id'])
-            print('d, id type', type(d['id']))
+            # d = serialize_item.data
+            # print('*****', d)
+            # d_cate = Item_Category.objects.get(id=int(d['category_id']))
+            # d['category'] = {
+            #     'id': str(d_cate.id),
+            #     'name': d_cate.name,
+            # }
+            # d['price'] = d['msrp_price']
+            # print('d, id', d['id'])
+            # print('d, id type', type(d['id']))
 
-            pics = []
-            print(type(d['images']))
-            print(d['images'])
-            for p in d['images'][:3]:
-                temp_dict = {}
-                for key, value in p.items():
-                    temp_dict[key] = value
-                    if key == 'full_image_url':
-                        temp_dict['url'] = value
-                pics.append(temp_dict)
-            d['pics'] = pics
+            # pics = []
+            # print(type(d['images']))
+            # print(d['images'])
+            # for p in d['images'][:3]:
+            #     temp_dict = {}
+            #     for key, value in p.items():
+            #         temp_dict[key] = value
+            #         if key == 'full_image_url':
+            #             temp_dict['url'] = value
+            #     pics.append(temp_dict)
+            # d['pics'] = pics
 
             # pics_with_item = Image.objects.filter(item_id=d['id'])
             # print('pics_with_item', pics_with_item)
@@ -107,17 +109,18 @@ def getItemInfoByCode(request, code):
             #                  'url': urljoin('http://', MEDIA_DOMAIN, p.local_image.url),
             #                  'has_saved': True})
             # d['pics'] = pics
-            return Response({'status': "success", 'data': d})
+            return Response({'status': "success", 'data': serialize_item.data})
     except Exception as e:
         print(e)
 
 
 def scrapInfoByBOCode(request, **kwargs):
-
-    url = getUrl(code)
-    result = scrap(url=url, code=code, lpn=lpn)
-    print('result', result)
+    code = kwargs.get('code')
+    lpn = kwargs.get('lpn') or None
+    result = scrap(code=code, lpn=lpn)
+    logger.info(f'result: {result}')
     if result['status'] == 1:
+        logger.info(result['data'])
         return JsonResponse({'status': 'success', 'data': result['data']})
     elif result['status'] == 0:
         return JsonResponse({'status': 'not found', 'message': result['message']})
@@ -131,7 +134,8 @@ def scrapInfoByNumCode(request, code):
     # url = getUrl(code)
     # result = scrap(url=url, code=code)
     # print('result', result)
-    result = scrapInfoByNumCodeService(code);
+    result = scrapInfoByNumCodeService(code, 'https://www.amazon.ca/')
+    logger.info(f'result: {result}')
     if result['status'] == 1:
         return JsonResponse({'status': 'success', 'data': result['data']})
     elif result['status'] == 0:
@@ -145,9 +149,9 @@ def scrapInfoByNumCode(request, code):
 def scrapInfoByURL(request):
     try:
         url = request.GET.get('url', '')
-        print('url', url)
+        logger.info(f'url: {url}')
         result = scrap(url=url)
-        print('result', result)
+        logger.info(f'result: {result}')
         if result['status'] == 1:
             return JsonResponse({'status': 'success', 'data': result['data']})
         elif result['status'] == 0:
@@ -189,7 +193,6 @@ class CategoryView(APIView):
 
 class AddNewItemView(APIView):
     renderer_classes = [JSONRenderer]
-
     def post(self, request, *args, **kwargs):
         # Get staff last issued item number
         try:
@@ -198,22 +201,21 @@ class AddNewItemView(APIView):
             # print('here', request.FILES.get('image').file)
 
             item_string = request.data.get('item')
+            logger.info(f'item string is: {item_string}')
+            is_new_string = request.data.get('is_new')
+            logger.info(f'is_new_string is: {is_new_string}')
+            is_new = json.loads(is_new_string)
             itm = json.loads(item_string)
             # print('here', request.FILES.get('image').uri)
             if itm:
-                print('here1')
-                stf = Profile.objects.get(user_id=itm['add_staff_id'])
-                print('here2', type(itm['add_staff_id']))
-                print('here3', itm['status_id'])
-
+                logger.info(f'add staff: {itm["add_staff"]}')
+                stf = Profile.objects.get(user_id=itm['add_user'])
+                print('stf', stf)
                 # Set staff last issued number + 1 to new added item number
                 data = itm.copy()
-                # data['category_id'] = int(data['category_id'])
-                # print('c id******',data['category_id'])
-                # print('c id******',type(data['category_id']))
                 new_last_issued_number = None
                 if not itm.get('item_number'):
-                    print('here4', stf.last_issued_number)
+                    logger.debug(f'last issued number: {stf.last_issued_number}')
                     if stf.last_issued_number + 1 <= stf.item_end:
                         data['item_number'] = stf.last_issued_number + 1
                         new_last_issued_number = stf.last_issued_number + 1
@@ -222,25 +224,37 @@ class AddNewItemView(APIView):
                 else:
                     new_last_issued_number = itm.get('item_number')
                 # Serialize data and save it
-                serializer_itm = ItemSerializer(data=data)
+                if is_new:
+                    serializer_itm = ItemSerializer(data=data)
+                else:
+                    old_item = Item.objects.get(id=data['id'])
+                    serializer_itm = ItemSerializer(old_item, data=data, partial=True)
                 serializer_stf = ProfileSerializer(stf, data={'last_issued_number': new_last_issued_number},
                                                    partial=True)
                 if serializer_itm.is_valid() and serializer_stf.is_valid():
                     itm_instance = serializer_itm.save()
-                    print('*********', itm_instance.category_id)
-                    stf_instance = serializer_stf.save()
+                    serializer_stf.save()
                     # Add or update images to the item
                     ids = request.data.getlist('img_id')
+                    # update items for removing images by deleting images that not in ids
+                    if not is_new:
+                        old_images = Image.objects.filter(item_id=data['id'])
+                        images_to_delete = old_images.exclude(pk__in=ids)
+                        images_to_delete.delete()
                     i = 1
                     if ids:
-                        for id in ids:
-                            id = int(id)
+                        # for id in ids:
+                        #     id = int(id)
                         for id in ids:
                             saved_img = Image.objects.get(id=id)
+                            # update items with its image updating to new item id
+                            if not is_new:
+                                saved_img.item_id = data['id']
+                                saved_img.save()
+                                continue
                             # scrapped image but haven't set foreign key to any item
-                            if not saved_img.item_id:
-                                print('here not')
-
+                            if not saved_img.item:
+                                logger.info('Not saved image')
                                 old_file = saved_img.local_image.path
                                 exts = get_extension(saved_img.local_image.name)
                                 new_file_relative = str(itm_instance.id) + '_' + str(i) + exts
@@ -253,7 +267,7 @@ class AddNewItemView(APIView):
                                 saved_img.item_id = itm_instance.id
                                 saved_img.save()
                             else:
-                                print('here')
+                                logger.info('Saved image')
                                 new_img = saved_img
                                 # copy the new instance
                                 new_img.pk = None
@@ -269,11 +283,11 @@ class AddNewItemView(APIView):
                             new_img.save()
                     return Response(serializer_itm.data, status=201)
                 else:
-                    print('err1', serializer_itm.errors)
-                    print('err2', serializer_stf.errors)
+                    logger.info(f'err1: {serializer_itm.errors}')
+                    logger.info(f'err2 {serializer_stf.errors}')
                     raise ValidationError()
         except Exception as err:
-            print('err', err)
+            logger.info(f'err: {err}')
             raise APIException()
 
 
@@ -360,7 +374,7 @@ def getItems(request):
     try:
         page_size = int(request.GET.get('page_size'))
         page_number = int(request.GET.get('page_number'))
-        items = Item.objects.order_by('id').prefetch_related('images').select_related('add_staff').select_related(
+        items = Item.objects.order_by('-add_date').prefetch_related('images').select_related('add_staff').select_related(
             'status')
         paginator = Paginator(items, per_page=page_size)
         page_obj = paginator.get_page(page_number)
@@ -526,4 +540,29 @@ def getLastItems(request, staff_id):
 
     except Exception as e:
         print('e', e)
+
+
+@api_view(['POST'])
+def uploadSoldProducts(request):
+    files = request.FILES.getlist('file')
+    sum_list = []
+    try:
+        for f in files:
+            sum_list.append(exportAuctionSummary(f))
+        full_path = create_zip(sum_list)
+        print('full_path', full_path)
+        # response = HttpResponse(open(full_path, 'rb'), content_type='application/zip')
+        # response['Content-Disposition'] = f'attachment; filename={os.path.basename(full_path)}'
+        # print('here before return')
+        return HttpResponse(full_path)
+    except Exception as e:
+        logger.error(e)
+        return HttpResponseServerError()
+    finally:
+        # if os.path.exists(full_path):
+        #     os.remove(full_path)
+        for f in sum_list:
+            if os.path.exists(f):
+                os.remove(f)
+
 
