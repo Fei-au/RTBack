@@ -73,7 +73,7 @@ def create_driver():
         driver = webdriver.Chrome(options=options)
     else:
         service = webdriver.EdgeService(executable_path=MS_WEBDRIVER_PATH)
-        print('here at ms driver')
+        logger.info('here at ms driver')
         driver = webdriver.Edge(options=options)
     return driver
 
@@ -107,7 +107,7 @@ def get_image_urls(driver, url):
                 span_element = thumbnail.find_element(By.CSS_SELECTOR,
                                                       'span.a-button.a-button-thumbnail.a-button-toggle')
                 ActionChains(driver).move_to_element(span_element).click().perform()
-            print('click each next image')
+            logger.info('click each next image')
 
             # Use explicit wait to wait for the <li> elements with class prefix "image item item" to be present
             li_elements = []
