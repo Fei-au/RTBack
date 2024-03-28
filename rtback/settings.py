@@ -45,7 +45,7 @@ SECRET_KEY = 'django-insecure-l&dw^_-lz1o*+akmdgo4k09=6ko010+q(dqfi+c_m3c$hqe%3#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if IS_DEVELOPMENT else False
 
-ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.168.2.144', '35.209.176.71', ' 70.31.50.163', '34.130.51.136']
+ALLOWED_HOSTS = ['192.168.2.79','192.168.2.16', 'localhost', '127.0.0.1', '192.168.2.173', '35.209.176.71', ' 70.31.50.163', '34.130.51.136']
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'responsetype',
 ]
@@ -206,6 +206,10 @@ TIME_ZONE = 'America/Toronto'
 USE_I18N = True
 
 USE_TZ = True
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5 MB
 
 
 # Static files (CSS, JavaScript, Images)
