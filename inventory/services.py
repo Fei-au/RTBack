@@ -12,6 +12,7 @@ from utils.currency import string_to_float_decimal
 from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
 from utils.file import get_extension_from_url
+import uuid
 from urllib.parse import urljoin
 from .serializers import ImageSerializer
 import re
@@ -476,7 +477,7 @@ def download_image(image_url):
         img_temp.flush()
         img_temp.seek(0)
         # Load the content into a Django File
-        img_file = ContentFile(img_temp.read(), name='temp_name' + extension)
+        img_file = ContentFile(img_temp.read(), name=str(uuid.uuid4())[0:8] + extension)
         # Save the image to the model's ImageField
         image_instance.local_image.save(img_file.name, img_file, save=True)
         image_instance.save()
